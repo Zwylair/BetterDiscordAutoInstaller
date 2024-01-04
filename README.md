@@ -1,4 +1,6 @@
-# BetterDiscordAutoInstaller
+<h1 align="center" style="font-size: 48px;">
+    BetterDiscordAutoInstaller
+</h1>
 
 <p align="center">
     <img src="https://img.shields.io/badge/python-3.11-green?logo=python&logoColor=white&style=for-the-badge">
