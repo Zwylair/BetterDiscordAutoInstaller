@@ -1,4 +1,4 @@
-<h1 align="center" style="font-size: 48px;">
+<h1 align="center">
     BetterDiscordAutoInstaller
 </h1>
 
@@ -28,7 +28,7 @@ python3 -m pip install -r requirements.txt
 
 Run the program:
 ```bash
-python3 main.py
+python3 installer.py
 ```
 
 ## License
