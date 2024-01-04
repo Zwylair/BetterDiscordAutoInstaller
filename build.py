@@ -46,10 +46,8 @@ for exe in EXECUTABLES:
     print(f'start building {exe.filepath}')
 
     args = [
-        '--force-stderr-spec=err.log',
         '--standalone',
         '--no-pyi-file',
-        '--jobs=4',
         f'--windows-icon-from-ico={exe.icon_path}' if exe.icon_path is not None else '',
         '' if exe.allow_console else '--disable-console'
     ]
