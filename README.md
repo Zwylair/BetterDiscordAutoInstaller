@@ -8,11 +8,11 @@
     <img src="https://img.shields.io/github/languages/code-size/Zwylair/BetterDiscordAutoInstaller?style=for-the-badge">
 </p>
 
-You can't imagine how much of a nuisance it is for me to have to reinstall BetterDiscord **MANUALLY** every time after Discord automatically updates. After searching up the internet, I realised that I wasn't the only one with this problem and I set out to solve it.
+## About
 
-**BetterDiscordAutoInstaller** is a program that automatically downloads and patches Discord to the latest version of BetterDiscord when you start Windows OS (only Windows for now).
+`BetterDiscordAutoInstaller` is a script that has the functionality of the official [BetterDiscord installer](https://betterdiscord.app/) of applying this mod on Discord (non canary, etc.). It automatically downloads `app.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and adds into loading modules.
 
-The program can be removed and added to autorun by the corresponding `remove_from_startup.py` and `add_to_startup.py` scripts, which **no longer requires** your MANUAL downloading and installing 130mb *(!)* official BetterDiscord stuff **EVERY DISCORD UPDATE**.
+`BetterDiscordAutoInstaller` also allows you to add it to autostart, without having to run it manually every time (only Windows for now).
 
 ## Setup and Dependencies
 
@@ -26,7 +26,7 @@ Install the dependencies:
 python3 -m pip install -r requirements.txt
 ```
 
-Run the program:
+Run the script:
 ```bash
 python3 installer.py
 ```
