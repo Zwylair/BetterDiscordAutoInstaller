@@ -10,7 +10,7 @@
 
 ## About
 
-`BetterDiscordAutoInstaller` is a script that has the functionality of the official [BetterDiscord installer](https://betterdiscord.app/) of applying this mod on Discord (non canary, etc.). It automatically downloads `app.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and adds into loading modules.
+`BetterDiscordAutoInstaller` is a script that has the functionality of the official [BetterDiscord installer](https://betterdiscord.app/) of applying this mod on Discord (non canary, etc.). It automatically downloads `betterdiscord.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and adds into loading modules.
 
 `BetterDiscordAutoInstaller` also allows you to add it to autostart, without having to run it manually every time (only Windows for now).
 
