@@ -18,10 +18,9 @@ REQ_PACKAGES = ['nuitka==1.9.3']
 COPY_DIRS = []
 COPY_FILES = []
 EXECUTABLES = [
-    Executable('installer.py', False),
+    Executable('installer.py', True),
     Executable('starter.py', False),
-    Executable('add_to_startup.py', False),
-    Executable('remove_from_startup.py', False),
+    Executable('startup_manager.py', True),
 ]
 
 

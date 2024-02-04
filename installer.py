@@ -2,37 +2,76 @@ import os
 import sys
 import time
 import logging
+import platform
 import subprocess
-import urllib.request
-import urllib.error
 import psutil
+import requests
 
-try:
-    import msvcrt
-except ImportError:
+if platform.system() != 'Windows':
     input(
         'Your system is not supported yet to using this script\n'
         '\n'
         'Press ENTER to exit.'
     )
-    exit(1)
+    sys.exit(1)
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format='(%(asctime)s) %(message)s')
 logger.setLevel(logging.INFO)
 
 APPDATA = os.getenv('appdata')
+LOCALAPPDATA = os.getenv('localappdata')
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(APPDATA, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
 
-DO_START_DISCORD: bool = '--do-not-start-discord' not in sys.argv
-IS_STARTED_SILENTLY: bool = '--silent' in sys.argv
-
 #
+logger.info('Killing discord...')
 
-discord_parent_path = f'{os.getenv("localappdata")}/Discord/'
+# killing discord to prevent any errors
+for process in psutil.process_iter(['name']):
+    if process.info['name'] == 'Discord.exe':
+        process.kill()
+
+# installing the latest version of discord (waiting for update.exe closing)
+logger.info('Updating discord to latest version...')
+
+subprocess.Popen(f'{os.path.join(LOCALAPPDATA, "Discord/Update.exe")} --processStart Discord.exe --process-start-args --start-minimized')
+quit_from_loop = False
+
+while True:
+    for process in psutil.process_iter(['pid', 'name']):
+        if process.name() == 'gpu_encoder_helper.exe':
+            while True:
+                try:
+                    process.status()  # idle request which causes error when closed
+                    time.sleep(1)
+                except psutil.NoSuchProcess:
+                    quit_from_loop = True
+                    break
+
+    time.sleep(0.5)
+
+    if quit_from_loop:
+        break
+
+for process in psutil.process_iter(['name']):
+    if process.info['name'] == 'Discord.exe':
+        try:
+            process.kill()
+        except psutil.NoSuchProcess:
+            pass
+
+
+logger.info('Update finished. Patching...')
+print()
+time.sleep(0.1)
+
+# patching
+
+# determining the latest installed version of discord
+discord_parent_path = f'{LOCALAPPDATA}/Discord/'
 discord_path = [i for i in os.listdir(discord_parent_path) if i.startswith('app-')]  # remove all not 'app-' items
-discord_path.sort()
+discord_path.sort()  # the oldest version will be the last of list
 discord_path = os.path.join(discord_parent_path, discord_path[-1])
 discord_modules_path = os.path.join(discord_path, 'modules')
 index_js_path = os.path.join(discord_modules_path, 'discord_desktop_core-1/discord_desktop_core/index.js')
@@ -48,7 +87,7 @@ logger.info('Making required folders...')
 
 for folder in bd_required_folders:
     if not os.path.exists(folder):
-        os.mkdir(folder)
+        os.makedirs(folder)
 
 logger.info('Folders have been made!')
 print()
@@ -58,12 +97,15 @@ time.sleep(0.1)
 logger.info('Trying to download BetterDiscord asar file...')
 
 while True:
-    try:
-        urllib.request.urlretrieve(BD_ASAR_URL, BD_ASAR_SAVE_PATH)
+    response = requests.get(BD_ASAR_URL)
+
+    if response.status_code == 200:
+        with open(BD_ASAR_SAVE_PATH, 'wb') as file:
+            file.write(response.content)
         break
-    except urllib.error.HTTPError as err:
-        logger.error('Timed out. Retrying to download in 2s...')
-        time.sleep(2)
+    else:
+        logger.info(f'Failed to download asar ({response.status_code}). Retrying in 3 seconds...')
+        time.sleep(3)
 
 logger.info('Asar has been successfully downloaded!')
 print()
@@ -90,23 +132,28 @@ else:
 print()
 time.sleep(0.1)
 
-
 # restarting discord
-if DO_START_DISCORD:
-    logger.info('Trying restart discord...')
+logger.info('Trying restart discord...')
 
-    for process in psutil.process_iter(['name']):
-        if process.info['name'] == 'Discord.exe':
-            process.kill()
+for process in psutil.process_iter(['name']):
+    if process.info['name'] == 'Discord.exe':
+        process.kill()
 
-    os.chdir('c:/')
-    subprocess.Popen(f'cmd /c start {os.path.join(discord_path, "discord.exe")}')
-    logger.info('Discord has been restarted!')
+time.sleep(1)
+
+# running discord from c:/ for prevent locking the script's working dir
+script_env_path = os.path.dirname(os.path.abspath(__file__))
+os.chdir('c:/')
+
+subprocess.Popen(f'cmd /c start {os.path.join(discord_path, "discord.exe")}')
+os.chdir(script_env_path)
+
+
+logger.info('Discord has been restarted!')
 print()
 time.sleep(0.1)
 
 logger.info('Installation finished!')
-
-if not IS_STARTED_SILENTLY:
-    logger.info('Press any key to exit...')
-    msvcrt.getch()
+logger.info('Exiting in 3 seconds...')
+time.sleep(3)
+sys.exit(0)

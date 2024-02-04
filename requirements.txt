@@ -1,2 +1,2 @@
 psutil==5.9.7
-pywin32==306
+requests==2.31.0
