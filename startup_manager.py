@@ -49,7 +49,7 @@ while True:
 
                     if got_input == '1':
                         value_name = 'BetterDiscordAutoInstaller'
-                        value_data = os.path.join(f'"{os.getcwd()}', 'starter.exe" --silent')
+                        value_data = os.path.join(f'"{os.getcwd()}', 'installer.exe"')
                         winreg.SetValueEx(reg_key, value_name, 0, winreg.REG_SZ, value_data)
 
                     else:
