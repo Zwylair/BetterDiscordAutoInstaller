@@ -32,7 +32,7 @@ for process in psutil.process_iter(['name']):
     if process.info['name'] == 'Discord.exe':
         process.kill()
 
-# installing the latest version of discord (waiting for update.exe closing)
+# installing the latest version of discord
 logger.info('Updating discord to latest version...')
 
 subprocess.Popen(f'{os.path.join(LOCALAPPDATA, "Discord/Update.exe")} --processStart Discord.exe --process-start-args --start-minimized')
@@ -49,7 +49,7 @@ while True:
                     quit_from_loop = True
                     break
 
-    time.sleep(0.5)
+    time.sleep(0.1)
 
     if quit_from_loop:
         break
