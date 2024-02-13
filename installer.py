@@ -24,7 +24,13 @@ LOCALAPPDATA = os.getenv('localappdata')
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(APPDATA, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
 
+if not os.path.exists(f'{LOCALAPPDATA}/Discord/Update.exe'):
+    logger.info(f'Discord was not found ({LOCALAPPDATA}/Discord).')
+    input('ENTER to exit...')
+    sys.exit(0)
+
 #
+
 logger.info('Killing discord...')
 
 # killing discord to prevent any errors
@@ -32,35 +38,26 @@ for process in psutil.process_iter(['name']):
     if process.info['name'] == 'Discord.exe':
         process.kill()
 
-# installing the latest version of discord
+# # installing the latest version of discord
 logger.info('Updating discord to latest version...')
 
-subprocess.Popen(f'{os.path.join(LOCALAPPDATA, "Discord/Update.exe")} --processStart Discord.exe --process-start-args --start-minimized')
-quit_from_loop = False
+subprocess.Popen(f'{os.path.join(LOCALAPPDATA, "Discord/Update.exe")} --processStart Discord.exe')
 
-while True:
-    for process in psutil.process_iter(['pid', 'name']):
-        if process.name() == 'gpu_encoder_helper.exe':
-            while True:
-                try:
-                    process.status()  # idle request which causes error when closed
-                    time.sleep(1)
-                except psutil.NoSuchProcess:
+quit_from_loop = False
+while not quit_from_loop:
+    for process in psutil.process_iter(['name']):
+        if quit_from_loop:
+            break
+
+        if process.info['name'] == 'Discord.exe':
+            if not process.is_running():
+                continue
+
+            for arg in process.cmdline():
+                # this arg will be only in updater, so if it is true, wait for terminating this process
+                if '--standard-schemes' in arg:
                     quit_from_loop = True
                     break
-
-    time.sleep(0.1)
-
-    if quit_from_loop:
-        break
-
-for process in psutil.process_iter(['name']):
-    if process.info['name'] == 'Discord.exe':
-        try:
-            process.kill()
-        except psutil.NoSuchProcess:
-            pass
-
 
 logger.info('Update finished. Patching...')
 print()
@@ -73,8 +70,8 @@ discord_parent_path = f'{LOCALAPPDATA}/Discord/'
 discord_path = [i for i in os.listdir(discord_parent_path) if i.startswith('app-')]  # remove all not 'app-' items
 discord_path.sort()  # the oldest version will be the last of list
 discord_path = os.path.join(discord_parent_path, discord_path[-1])
-discord_modules_path = os.path.join(discord_path, 'modules')
-index_js_path = os.path.join(discord_modules_path, 'discord_desktop_core-1/discord_desktop_core/index.js')
+index_js_path = os.path.join(discord_path, 'modules/discord_desktop_core-1/discord_desktop_core/index.js')
+index_js_default_content = b"module.exports = require('./core.asar');"
 bd_required_folders = [
     f'{APPDATA}/BetterDiscord',
     f'{APPDATA}/BetterDiscord/data',
@@ -97,15 +94,15 @@ time.sleep(0.1)
 logger.info('Trying to download BetterDiscord asar file...')
 
 while True:
-    response = requests.get(BD_ASAR_URL)
-
-    if response.status_code == 200:
+    try:
+        response = requests.get(BD_ASAR_URL)
+    except requests.exceptions.ConnectionError:
+        print(f'Failed to download asar. Retrying in 3 seconds...')
+        time.sleep(3)
+    else:
         with open(BD_ASAR_SAVE_PATH, 'wb') as file:
             file.write(response.content)
         break
-    else:
-        logger.info(f'Failed to download asar ({response.status_code}). Retrying in 3 seconds...')
-        time.sleep(3)
 
 logger.info('Asar has been successfully downloaded!')
 print()
@@ -113,6 +110,12 @@ time.sleep(0.1)
 
 # patching index.js
 logger.info('Trying to patch discord startup script...')
+
+if not os.path.exists(index_js_path):
+    os.makedirs(os.path.join(discord_path, 'modules/discord_desktop_core-1/discord_desktop_core'))
+
+    with open(index_js_path, 'wb') as file:
+        file.write(index_js_default_content)
 
 with open(index_js_path, 'rb') as file:
     content = file.readlines()
@@ -143,11 +146,10 @@ time.sleep(1)
 
 # running discord from c:/ for prevent locking the script's working dir
 script_env_path = os.path.dirname(os.path.abspath(__file__))
-os.chdir('c:/')
 
+os.chdir('c:/')
 subprocess.Popen(f'cmd /c start {os.path.join(discord_path, "discord.exe")}')
 os.chdir(script_env_path)
-
 
 logger.info('Discord has been restarted!')
 print()

@@ -19,7 +19,6 @@ COPY_DIRS = []
 COPY_FILES = []
 EXECUTABLES = [
     Executable('installer.py', True),
-    Executable('starter.py', False),
     Executable('startup_manager.py', True),
 ]
 
