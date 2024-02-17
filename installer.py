@@ -1,6 +1,7 @@
 import os
 import sys
 import time
+import json
 import logging
 import platform
 import subprocess
@@ -19,68 +20,121 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='(%(asctime)s) %(message)s')
 logger.setLevel(logging.INFO)
 
+CURRENT_SETTINGS_VERSION = 1
+SETTINGS_PATH = 'settings.json'
+
 APPDATA = os.getenv('appdata')
 LOCALAPPDATA = os.getenv('localappdata')
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(APPDATA, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
 
-if not os.path.exists(f'{LOCALAPPDATA}/Discord/Update.exe'):
-    logger.info(f'Discord was not found ({LOCALAPPDATA}/Discord).')
-    input('ENTER to exit...')
-    sys.exit(0)
 
-#
+def start_discord():
+    # running discord from c:/ for prevent locking the script's working dir
+    script_working_dir = os.path.dirname(os.path.abspath(__file__))
 
-logger.info('Killing discord...')
+    os.chdir('c:/')
+    subprocess.Popen(f'{os.path.join(DISCORD_PARENT_PATH, "Update.exe")} --processStart Discord.exe')
+    os.chdir(script_working_dir)
 
-# killing discord to prevent any errors
+
+# load settings
+if os.path.exists(SETTINGS_PATH):
+    settings: dict = json.load(open(SETTINGS_PATH))
+
+    DISCORD_PARENT_PATH = settings.get('discord_installed_path')
+else:
+    DISCORD_PARENT_PATH = f'{LOCALAPPDATA}/Discord'
+
+# get discord location from user if it is not valid
+while True:
+    if not os.path.exists(os.path.join(DISCORD_PARENT_PATH, 'update.exe')):
+        logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}". Enter the dir to folder with "Update.exe":')
+        DISCORD_PARENT_PATH = input('\n=> ')
+
+        json.dump({'discord_installed_path': DISCORD_PARENT_PATH}, open(SETTINGS_PATH, 'w'))
+    else:
+        break
+
+# The "--service-sandbox-type=audio" argument will only be in the
+# updated discord instance, so it won't be in the update module
+
+is_discord_running = False
+is_discord_updating = True
+
+# checking for currently updating discord
+
 for process in psutil.process_iter(['name']):
-    if process.info['name'] == 'Discord.exe':
-        process.kill()
+    if process.info.get('name') == 'Discord.exe':
+        is_discord_running = True
 
-# # installing the latest version of discord
-logger.info('Updating discord to latest version...')
+        try:
+            for arg in process.cmdline():
+                if '--service-sandbox-type=audio' in arg:
+                    is_discord_updating = False
+        except psutil.NoSuchProcess:
+            pass
 
-subprocess.Popen(f'{os.path.join(LOCALAPPDATA, "Discord/Update.exe")} --processStart Discord.exe')
+if is_discord_running and not is_discord_updating:
+    logger.info('Discord is started and not updating. Killing discord...')
 
+    for process in psutil.process_iter(['name']):
+        if process.info['name'] == 'Discord.exe' and process.is_running():
+            process.kill()
+    time.sleep(2)  # discord may not close instantly, so we need to wait for a while
+    is_discord_running = False
+
+# installing the latest version of discord
+if not is_discord_running:
+    discord_path = [i for i in os.listdir(DISCORD_PARENT_PATH) if i.startswith('app-')]  # remove all not 'app-' items
+    discord_path.sort()  # the oldest version will be the last of list
+    discord_path = os.path.join(DISCORD_PARENT_PATH, discord_path[-1])
+
+    start_discord()
+    logger.info('Discord updater started')
+
+logger.info('Waiting for finish of discord updating...')
 quit_from_loop = False
+
 while not quit_from_loop:
     for process in psutil.process_iter(['name']):
         if quit_from_loop:
             break
 
         if process.info['name'] == 'Discord.exe':
-            if not process.is_running():
-                continue
-
-            for arg in process.cmdline():
-                # this arg will be only in updater, so if it is true, wait for terminating this process
-                if '--standard-schemes' in arg:
-                    quit_from_loop = True
-                    break
+            try:
+                for arg in process.cmdline():
+                    if '--service-sandbox-type=audio' in arg:
+                        time.sleep(5)  # wait 5 seconds to avoid any problematic shit
+                        quit_from_loop = True
+                        break
+            except psutil.NoSuchProcess:
+                pass
 
 logger.info('Update finished. Patching...')
 print()
 time.sleep(0.1)
 
 # patching
+for process in psutil.process_iter(['name']):
+    if process.info['name'] == 'Discord.exe' and process.is_running():
+        process.kill()
+time.sleep(2)
 
 # determining the latest installed version of discord
-discord_parent_path = f'{LOCALAPPDATA}/Discord/'
-discord_path = [i for i in os.listdir(discord_parent_path) if i.startswith('app-')]  # remove all not 'app-' items
+discord_path = [i for i in os.listdir(DISCORD_PARENT_PATH) if i.startswith('app-')]  # remove all not 'app-' items
 discord_path.sort()  # the oldest version will be the last of list
-discord_path = os.path.join(discord_parent_path, discord_path[-1])
+discord_path = os.path.join(DISCORD_PARENT_PATH, discord_path[-1])
 index_js_path = os.path.join(discord_path, 'modules/discord_desktop_core-1/discord_desktop_core/index.js')
-index_js_default_content = b"module.exports = require('./core.asar');"
 bd_required_folders = [
-    f'{APPDATA}/BetterDiscord',
-    f'{APPDATA}/BetterDiscord/data',
-    f'{APPDATA}/BetterDiscord/themes',
-    f'{APPDATA}/BetterDiscord/plugins'
+    os.path.join(APPDATA, 'BetterDiscord'),
+    os.path.join(APPDATA, 'BetterDiscord/data'),
+    os.path.join(APPDATA, 'BetterDiscord/themes'),
+    os.path.join(APPDATA, 'BetterDiscord/plugins')
 ]
 
 # making folders
-logger.info('Making required folders...')
+logger.info('Making folders...')
 
 for folder in bd_required_folders:
     if not os.path.exists(folder):
@@ -97,7 +151,7 @@ while True:
     try:
         response = requests.get(BD_ASAR_URL)
     except requests.exceptions.ConnectionError:
-        print(f'Failed to download asar. Retrying in 3 seconds...')
+        logger.info(f'Failed to download asar. Retrying in 3 seconds...')
         time.sleep(3)
     else:
         with open(BD_ASAR_SAVE_PATH, 'wb') as file:
@@ -110,12 +164,6 @@ time.sleep(0.1)
 
 # patching index.js
 logger.info('Trying to patch discord startup script...')
-
-if not os.path.exists(index_js_path):
-    os.makedirs(os.path.join(discord_path, 'modules/discord_desktop_core-1/discord_desktop_core'))
-
-    with open(index_js_path, 'wb') as file:
-        file.write(index_js_default_content)
 
 with open(index_js_path, 'rb') as file:
     content = file.readlines()
@@ -135,23 +183,9 @@ else:
 print()
 time.sleep(0.1)
 
-# restarting discord
-logger.info('Trying restart discord...')
-
-for process in psutil.process_iter(['name']):
-    if process.info['name'] == 'Discord.exe':
-        process.kill()
-
-time.sleep(1)
-
-# running discord from c:/ for prevent locking the script's working dir
-script_env_path = os.path.dirname(os.path.abspath(__file__))
-
-os.chdir('c:/')
-subprocess.Popen(f'cmd /c start {os.path.join(discord_path, "discord.exe")}')
-os.chdir(script_env_path)
-
-logger.info('Discord has been restarted!')
+# start discord
+start_discord()
+logger.info('Discord has been started!')
 print()
 time.sleep(0.1)
 
