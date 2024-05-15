@@ -163,3 +163,4 @@ cython_debug/
 *dist
 test*
 db.sql
+settings.json

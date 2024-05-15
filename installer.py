@@ -20,9 +20,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(format='(%(asctime)s) %(message)s')
 logger.setLevel(logging.INFO)
 
-CURRENT_SETTINGS_VERSION = 1
 SETTINGS_PATH = 'settings.json'
-
 APPDATA = os.getenv('appdata')
 LOCALAPPDATA = os.getenv('localappdata')
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
@@ -38,13 +36,34 @@ def start_discord():
     os.chdir(script_working_dir)
 
 
-# load settings
-if os.path.exists(SETTINGS_PATH):
-    settings: dict = json.load(open(SETTINGS_PATH))
+logger.info('BetterDiscordAutoInstaller v1.2.0')
+print()
+time.sleep(0.1)
 
-    DISCORD_PARENT_PATH = settings.get('discord_installed_path')
-else:
-    DISCORD_PARENT_PATH = f'{LOCALAPPDATA}/Discord'
+# load settings
+CURRENT_SETTINGS_VERSION = 2
+DISCORD_PARENT_PATH = f'{LOCALAPPDATA}/Discord'
+LAST_INSTALLED_DISCORD_VERSION = None
+
+if os.path.exists(SETTINGS_PATH):
+    try:
+        settings: dict = json.load(open(SETTINGS_PATH))
+    except json.JSONDecodeError:
+        logger.info('Settings were corrupted. Using default values')
+    else:
+        settings_version = settings.get('settings_version')
+
+        if settings_version is None:  # first version of settings (settings_version just was not saved xd)
+            DISCORD_PARENT_PATH = settings.get('discord_installed_path')
+        elif settings_version == 2:
+            DISCORD_PARENT_PATH = settings.get('discord_installed_path')
+            LAST_INSTALLED_DISCORD_VERSION = settings.get('last_installed_discord_version')
+
+# determining the latest installed version of discord
+discord_path = [i for i in os.listdir(DISCORD_PARENT_PATH) if i.startswith('app-')]  # remove all not 'app-' items
+discord_path.sort()
+latest_installed_discord_version = discord_path[-1]  # the oldest version will be the last of list
+discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_version)
 
 # get discord location from user if it is not valid
 while True:
@@ -52,9 +71,21 @@ while True:
         logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}". Enter the dir to folder with "Update.exe":')
         DISCORD_PARENT_PATH = input('\n=> ')
 
-        json.dump({'discord_installed_path': DISCORD_PARENT_PATH}, open(SETTINGS_PATH, 'w'))
+        json.dump(
+            {
+                'settings_version': CURRENT_SETTINGS_VERSION,
+                'discord_installed_path': DISCORD_PARENT_PATH,
+                'last_installed_discord_version': LAST_INSTALLED_DISCORD_VERSION
+            },
+            open(SETTINGS_PATH, 'w')
+        )
     else:
         break
+
+if latest_installed_discord_version == LAST_INSTALLED_DISCORD_VERSION:
+    logger.info('Discord is up to date, patching is not needed. Exiting in 3 seconds...')
+    time.sleep(3)
+    sys.exit(0)
 
 # The "--service-sandbox-type=audio" argument will only be in the
 # updated discord instance, so it won't be in the update module
@@ -63,7 +94,6 @@ is_discord_running = False
 is_discord_updating = True
 
 # checking for currently updating discord
-
 for process in psutil.process_iter(['name']):
     if process.info.get('name') == 'Discord.exe':
         is_discord_running = True
@@ -79,17 +109,17 @@ if is_discord_running and not is_discord_updating:
     logger.info('Discord is started and not updating. Killing discord...')
 
     for process in psutil.process_iter(['name']):
-        if process.info['name'] == 'Discord.exe' and process.is_running():
-            process.kill()
+        if process.info['name'] == 'Discord.exe':
+            try:
+                process.kill()
+            except psutil.NoSuchProcess:
+                pass
+
     time.sleep(2)  # discord may not close instantly, so we need to wait for a while
     is_discord_running = False
 
 # installing the latest version of discord
 if not is_discord_running:
-    discord_path = [i for i in os.listdir(DISCORD_PARENT_PATH) if i.startswith('app-')]  # remove all not 'app-' items
-    discord_path.sort()  # the oldest version will be the last of list
-    discord_path = os.path.join(DISCORD_PARENT_PATH, discord_path[-1])
-
     start_discord()
     logger.info('Discord updater started')
 
@@ -116,15 +146,26 @@ print()
 time.sleep(0.1)
 
 # patching
+# determining the latest installed version of discord (after update)
+discord_path = [i for i in os.listdir(DISCORD_PARENT_PATH) if i.startswith('app-')]  # remove all not 'app-' items
+discord_path.sort()
+latest_installed_discord_version = discord_path[-1]  # the oldest version will be the last of list
+discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_version)
+
+json.dump(
+    {
+        'settings_version': CURRENT_SETTINGS_VERSION,
+        'discord_installed_path': DISCORD_PARENT_PATH,
+        'last_installed_discord_version': latest_installed_discord_version
+    },
+    open(SETTINGS_PATH, 'w')
+)
+
 for process in psutil.process_iter(['name']):
     if process.info['name'] == 'Discord.exe' and process.is_running():
         process.kill()
 time.sleep(2)
 
-# determining the latest installed version of discord
-discord_path = [i for i in os.listdir(DISCORD_PARENT_PATH) if i.startswith('app-')]  # remove all not 'app-' items
-discord_path.sort()  # the oldest version will be the last of list
-discord_path = os.path.join(DISCORD_PARENT_PATH, discord_path[-1])
 index_js_path = os.path.join(discord_path, 'modules/discord_desktop_core-1/discord_desktop_core/index.js')
 bd_required_folders = [
     os.path.join(APPDATA, 'BetterDiscord'),
@@ -137,8 +178,7 @@ bd_required_folders = [
 logger.info('Making folders...')
 
 for folder in bd_required_folders:
-    if not os.path.exists(folder):
-        os.makedirs(folder)
+    os.makedirs(folder, exist_ok=True)
 
 logger.info('Folders have been made!')
 print()
