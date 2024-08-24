@@ -1,62 +1,48 @@
 import os
 import sys
+import winshell
 
-try:
-    import winreg
-    import msvcrt
-except ImportError:
+if os.name != 'nt':
     input(
-        'Your system is not supported yet to using this script\n'
+        'Your system is not supported to using this script\n'
         '\n'
         'Press ENTER to exit.'
     )
-    exit(1)
+    sys.exit(0)
 
 
-def cls():
-    os.system('cls')
+link_working_directory = os.path.dirname(__file__)
+link_target = sys.executable
+link_arguments = os.path.join(link_working_directory, 'main.py')
+link_path = os.path.join(
+    os.getenv('appdata'),
+    r'Microsoft\Windows\Start Menu\Programs\Startup\BetterDiscordAutoInstaller.lnk'
+)
 
+if getattr(sys, 'frozen', False):
+    link_working_directory = os.path.dirname(sys.executable)
+    link_target = os.path.join(link_working_directory, 'main.exe')
+    link_arguments = ''
 
-key_path = r'SOFTWARE\Microsoft\Windows\CurrentVersion\Run'
-callback = ''
+print('BetterDiscordAutoInstaller v1.2.1 (startup_manager)')
 
 while True:
-    cls()
-
-    if callback:
-        print(f'{callback}\n')
-        callback = ''
-
-    print(
-        '[0] -- Exit\n'
+    command = input(
         '[1] -- Add to startup\n'
-        '[2] -- Remove from startup'
+        '[2] -- Remove from startup\n'
+        '\n'
+        '> '
     )
 
-    got_input = msvcrt.getch().decode('utf-8')
+    match command:
+        case '1':  # no elevation needed
+            with winshell.shortcut(link_path) as link:
+                link.path = link_target
+                link.arguments = link_arguments
+                link.working_directory = link_working_directory
+                link.description = 'BetterDiscordAutoInstaller v1.2.1'
 
-    if got_input in ('0', '1', '2'):
-        match got_input:
-            case '0':
-                sys.exit(0)
-            case '1' | '2':
-                try:
-                    # Open the registry key or create it if it doesn't exist
-                    try:
-                        reg_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, key_path, 0, winreg.KEY_ALL_ACCESS)
-                    except FileNotFoundError:
-                        reg_key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, key_path)
-
-                    if got_input == '1':
-                        value_name = 'BetterDiscordAutoInstaller'
-                        value_data = os.path.join(f'"{os.getcwd()}', 'installer.exe"')
-                        winreg.SetValueEx(reg_key, value_name, 0, winreg.REG_SZ, value_data)
-
-                    else:
-                        winreg.DeleteValue(reg_key, 'BetterDiscordAutoInstaller')
-                    winreg.CloseKey(reg_key)
-
-                except Exception as err:
-                    callback = f'An error occurred: {err}'
-                else:
-                    callback = 'Added' if got_input == '1' else 'Removed'
+            print('\n.lnk file of the BetterDiscordAutoInstaller was added to startup.\n')
+        case '2':
+            os.remove(link_path)
+            print('\n.lnk file of the BetterDiscordAutoInstaller was removed from startup.\n')

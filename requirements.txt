@@ -1,2 +1,3 @@
-psutil==5.9.7
-requests==2.31.0
+psutil~=5.9.7
+requests~=2.31.0
+winshell~=0.6
