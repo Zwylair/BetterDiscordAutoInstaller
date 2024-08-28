@@ -11,7 +11,7 @@
 
 ## About
 
-[BetterDiscordAutoInstaller repository](https://github.com/Zwylair/BetterDiscordAutoInstaller), originally made by [Zwylair](https://github.com/Zwylair)
+macOS fork for [BetterDiscordAutoInstaller repository](https://github.com/Zwylair/BetterDiscordAutoInstaller), originally made by [Zwylair](https://github.com/Zwylair). Currently a draft pull request.
 
 `BetterDiscordAutoInstaller` is a script that works as the official [BetterDiscord installer](https://betterdiscord.app/). This script applies mod on **default** Discord (non canary, etc.). It automatically downloads `betterdiscord.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and adds into loading modules.
 
