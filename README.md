@@ -1,6 +1,9 @@
+
 <h1 align="center">
     BetterDiscordAutoInstaller
 </h1>
+<h2>Contribution fork from .</h2>
+[BetterDiscordAutoInstaller repository](https://github.com/Zwylair/BetterDiscordAutoInstaller), originally made by [Zwylair](https://github.com/Zwylair)
 
 <p align="center">
     <img src="https://img.shields.io/badge/python-3.12-green?logo=python&logoColor=white&style=for-the-badge">
