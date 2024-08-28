@@ -2,8 +2,6 @@
 <h1 align="center">
     BetterDiscordAutoInstaller
 </h1>
-<h2>Contribution fork from .</h2>
-[BetterDiscordAutoInstaller repository](https://github.com/Zwylair/BetterDiscordAutoInstaller), originally made by [Zwylair](https://github.com/Zwylair)
 
 <p align="center">
     <img src="https://img.shields.io/badge/python-3.12-green?logo=python&logoColor=white&style=for-the-badge">
@@ -12,6 +10,8 @@
 </p>
 
 ## About
+
+[BetterDiscordAutoInstaller repository](https://github.com/Zwylair/BetterDiscordAutoInstaller), originally made by [Zwylair](https://github.com/Zwylair)
 
 `BetterDiscordAutoInstaller` is a script that works as the official [BetterDiscord installer](https://betterdiscord.app/). This script applies mod on **default** Discord (non canary, etc.). It automatically downloads `betterdiscord.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and adds into loading modules.
 
