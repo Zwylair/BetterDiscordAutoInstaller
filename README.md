@@ -171,5 +171,9 @@ Well, just fork it
 
 **But please, don't forget to mention original project in your README**
 
+## Special thanks
+
+**[Ajit Mehrotra](https://github.com/Ajit-Mehrotra)** for adding masOS support
+
 ## License
 This project is under the [MIT license](./LICENSE).
