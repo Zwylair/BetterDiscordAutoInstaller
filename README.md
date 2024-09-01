@@ -11,8 +11,6 @@
 
 ## About
 
-macOS fork for [BetterDiscordAutoInstaller repository](https://github.com/Zwylair/BetterDiscordAutoInstaller), originally made by [Zwylair](https://github.com/Zwylair). Currently a draft pull request.
-
 `BetterDiscordAutoInstaller` is a script that works as the official [BetterDiscord installer](https://betterdiscord.app/). This script applies mod on **default** Discord (non canary, etc.). It automatically downloads `betterdiscord.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and adds into loading modules.
 
 `BetterDiscordAutoInstaller` also allows you to add/remove it from autostart, without having to run it manually every time. For MacOS, the user can also choose to bind script to a keyboard shortcut to manually update.
@@ -156,11 +154,10 @@ The auto-installer-mac.py script automates the installation of BetterDiscord whe
 
 ## Contributing
 
+### Windows
 I will be grateful for any contribution and help given to improve the quality of the project :)
 
-_(especially about adapting the project to other platforms like linux, macos :3)_
-
-### Windows
+_(especially about adapting the project to other platforms like linux, etc :3)_
 
 ### macOS
 There is redundant/repetitive code which is seen both in manual-installer-mac.py and auto-installer-mac.py. 
@@ -168,7 +165,6 @@ There is redundant/repetitive code which is seen both in manual-installer-mac.py
 That can be fixed. Just need to make sure to have 2 seperate files to allow for auto, manual install, and auto/manual-mixed functionalities. 
 
 ### Fork
-
 Well, just fork it
 
 **But please, don't forget to mention original project in your README**
