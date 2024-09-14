@@ -36,6 +36,11 @@ Run the script:
 py main.py
 ```
 
+To add BetterDiscordAutoInstaller to your startup apps:
+```bash
+py startup_manager.py
+```
+
 ### MacOS
 
 This repository contains two Python scripts for automatically installing BetterDiscord on macOS. The scripts provide two different installation methods: one for manual installation with a keyboard shortcut and another for automatic installation on startup.
