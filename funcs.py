@@ -8,7 +8,11 @@ def start_discord(discord_parent_path: str):
     script_working_dir = os.getcwd()
 
     os.chdir('c:/')
-    subprocess.Popen(f'{os.path.join(discord_parent_path, "Update.exe")} --processStart Discord.exe')
+    if 'scoop\\apps' in discord_parent_path:
+        latest_installed_discord_version = get_latest_installed_discord_folder_name(discord_parent_path)
+        subprocess.Popen(f'{os.path.join(discord_parent_path, latest_installed_discord_version, "Discord.exe")}', stdout=subprocess.DEVNULL)
+    else:
+        subprocess.Popen(f'{os.path.join(discord_parent_path, "Update.exe")} --processStart Discord.exe')
     os.chdir(script_working_dir)
 
 
