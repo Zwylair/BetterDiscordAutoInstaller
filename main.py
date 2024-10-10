@@ -1,6 +1,7 @@
 import sys
 import time
 import json
+import shutil
 import logging
 import requests
 from funcs import *
@@ -29,6 +30,7 @@ if os.name != 'nt':
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
 appdata = os.getenv('appdata')
+home = os.getenv('userprofile')
 localappdata = os.getenv('localappdata')
 
 SETTINGS_PATH = 'settings.json'
@@ -39,9 +41,15 @@ logger.info('BetterDiscordAutoInstaller v1.2.1\n')
 
 # default settings
 CURRENT_SETTINGS_VERSION = 3
-DISCORD_PARENT_PATH = f'{localappdata}/Discord'
+DISCORD_PARENT_PATH = f'{localappdata}\\Discord'
 LAST_INSTALLED_DISCORD_VERSION = None
 DISABLE_VERSION_CHECKING = False
+
+if shutil.which('scoop') is not None:
+    scoop_info = subprocess.run(['scoop', 'list', 'discord'], capture_output=True, text=True, shell=True).stdout.splitlines()
+    discord_line = next((line for line in scoop_info if line.startswith('discord ')), None)
+    if discord_line:
+        DISCORD_PARENT_PATH = f'{home}\\scoop\\apps\\discord\\current\\app'
 
 # try to load settings
 if os.path.exists(SETTINGS_PATH):
@@ -60,8 +68,8 @@ discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_versio
 
 # get discord location from user if it is invalid
 while True:
-    if not os.path.exists(os.path.join(DISCORD_PARENT_PATH, 'update.exe')):
-        logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}". Enter the path to folder with "Update.exe":')
+    if not os.path.exists(os.path.join(DISCORD_PARENT_PATH, 'Update.exe')) and not os.path.exists(os.path.join(discord_path, 'Discord.exe')):
+        logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}".\nEnter the path to folder with "Update.exe" for normal installations or full path of ~\\scoop\\apps\\discord\\current\\app for scoop installations:')
         DISCORD_PARENT_PATH = input('\n=> ')
         dump_settings()
     else:
