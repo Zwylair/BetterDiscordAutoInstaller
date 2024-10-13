@@ -37,7 +37,7 @@ SETTINGS_PATH = 'settings.json'
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(appdata, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
 
-logger.info('BetterDiscordAutoInstaller v1.2.1\n')
+logger.info('BetterDiscordAutoInstaller v1.2.2\n')
 
 # default settings
 CURRENT_SETTINGS_VERSION = 3
