@@ -1,6 +1,7 @@
 import sys
 import time
 import json
+import glob
 import shutil
 import logging
 import requests
@@ -47,9 +48,13 @@ DISABLE_VERSION_CHECKING = False
 
 if shutil.which('scoop') is not None:
     scoop_info = subprocess.run(['scoop', 'list', 'discord'], capture_output=True, text=True, shell=True).stdout.splitlines()
-    discord_line = next((line for line in scoop_info if line.startswith('discord ')), None)
-    if discord_line and not os.path.exists(f'{home}\\scoop\\apps\\discord\\current\\discord-portable.exe'):
-        DISCORD_PARENT_PATH = f'{home}\\scoop\\apps\\discord\\current'
+    discord_line = next((line for line in scoop_info if line.startswith('discord')), None)
+    if discord_line and not glob.glob(f'{home}\\scoop\\apps\\discord*\\current\\discord-portable.exe'):
+        scoop_apps = os.listdir(f'{home}\\scoop\\apps')
+        for app in scoop_apps:
+            if app.startswith('discord'):
+                DISCORD_PARENT_PATH = f'{home}\\scoop\\apps\\{app}\\current'
+                break
 
 # try to load settings
 if os.path.exists(SETTINGS_PATH):
