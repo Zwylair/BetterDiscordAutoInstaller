@@ -48,8 +48,8 @@ DISABLE_VERSION_CHECKING = False
 if shutil.which('scoop') is not None:
     scoop_info = subprocess.run(['scoop', 'list', 'discord'], capture_output=True, text=True, shell=True).stdout.splitlines()
     discord_line = next((line for line in scoop_info if line.startswith('discord ')), None)
-    if discord_line:
-        DISCORD_PARENT_PATH = f'{home}\\scoop\\apps\\discord\\current\\app'
+    if discord_line and not os.path.exists(f'{home}\\scoop\\apps\\discord\\current\\discord-portable.exe'):
+        DISCORD_PARENT_PATH = f'{home}\\scoop\\apps\\discord\\current'
 
 # try to load settings
 if os.path.exists(SETTINGS_PATH):
