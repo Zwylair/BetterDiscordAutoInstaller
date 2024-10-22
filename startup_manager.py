@@ -24,7 +24,7 @@ if getattr(sys, 'frozen', False):
     link_target = os.path.join(link_working_directory, 'main.exe')
     link_arguments = ''
 
-print('BetterDiscordAutoInstaller v1.2.1 (startup_manager)')
+print('BetterDiscordAutoInstaller v1.2.3 (startup_manager)')
 
 while True:
     command = input(
@@ -40,7 +40,7 @@ while True:
                 link.path = link_target
                 link.arguments = link_arguments
                 link.working_directory = link_working_directory
-                link.description = 'BetterDiscordAutoInstaller v1.2.1'
+                link.description = 'BetterDiscordAutoInstaller v1.2.3'
 
             print('\n.lnk file of the BetterDiscordAutoInstaller was added to startup.\n')
         case '2':
