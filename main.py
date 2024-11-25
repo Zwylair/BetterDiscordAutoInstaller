@@ -5,7 +5,6 @@ import glob
 import shutil
 import logging
 import requests
-from funcs import *
 
 
 def dump_settings():
