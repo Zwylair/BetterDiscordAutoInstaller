@@ -5,8 +5,10 @@ import glob
 import shutil
 import logging
 import requests
-from funcs import *
+import os
+import subprocess
 
+from funcs import *
 
 def dump_settings():
     json.dump(
@@ -19,6 +21,11 @@ def dump_settings():
         open(SETTINGS_PATH, 'w')
     )
 
+def download_plugin(url, save_path):
+    response = requests.get(url)
+    with open(save_path, 'wb') as plugin_file:
+        plugin_file.write(response.content)
+    logger.info(f'Plugin downloaded and saved to {save_path}')
 
 if os.name != 'nt':
     input(
@@ -37,12 +44,25 @@ localappdata = os.getenv('localappdata')
 SETTINGS_PATH = 'settings.json'
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(appdata, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
+PLUGIN_URLS = [
+    'https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js',
+    'https://raw.githubusercontent.com/1Lighty/BetterDiscordPlugins/master/Plugins/1XenoLib.plugin.js',
+    'https://mwittrien.github.io/BetterDiscordAddons/Plugins/PluginRepo/PluginRepo.plugin.js'
+]
+PLUGIN_SAVE_PATHS = [
+    os.path.join(appdata, 'BetterDiscord/plugins/YABDP4Nitro.plugin.js'),
+    os.path.join(appdata, 'BetterDiscord/plugins/PluginRepo.plugin.js'),
+    os.path.join(appdata, 'BetterDiscord/plugins/1XenoLib.plugin.js'),
+    os.path.join(appdata, 'BetterDiscord/plugins/PluginRepo_2.plugin.js')  # Different save path for the second PluginRepo
+]
 
 logger.info('BetterDiscordAutoInstaller v1.2.3\n')
 
 # default settings
 CURRENT_SETTINGS_VERSION = 3
 DISCORD_PARENT_PATH = f'{localappdata}\\Discord'
+DISCORD_PTB_PATH = f'{localappdata}\\DiscordPTB'
+DISCORD_CANARY_PATH = f'{localappdata}\\DiscordCanary'
 LAST_INSTALLED_DISCORD_VERSION = None
 DISABLE_VERSION_CHECKING = False
 
@@ -59,7 +79,7 @@ if shutil.which('scoop') is not None:
 # try to load settings
 if os.path.exists(SETTINGS_PATH):
     try:
-        settings: dict = json.load(open(SETTINGS_PATH))
+        settings = json.load(open(SETTINGS_PATH))
     except json.JSONDecodeError:
         logger.info('The settings have been corrupted. Using default values.')
     else:
@@ -74,9 +94,14 @@ discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_versio
 # get discord location from user if it is invalid
 while True:
     if not os.path.exists(os.path.join(DISCORD_PARENT_PATH, 'Update.exe')) and not os.path.exists(os.path.join(discord_path, 'Discord.exe')):
-        logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}".\nEnter the path to folder with "Update.exe" for normal installations or full path of ~\\scoop\\apps\\discord\\current\\app for scoop installations:')
-        DISCORD_PARENT_PATH = input('\n=> ')
-        dump_settings()
+        if os.path.exists(os.path.join(DISCORD_PTB_PATH, 'Update.exe')):
+            DISCORD_PARENT_PATH = DISCORD_PTB_PATH
+        elif os.path.exists(os.path.join(DISCORD_CANARY_PATH, 'Update.exe')):
+            DISCORD_PARENT_PATH = DISCORD_CANARY_PATH
+        else:
+            logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}".\nEnter the path to folder with "Update.exe" for normal installations or full path of ~\\scoop\\apps\\discord\\current\\app for scoop installations')
+            DISCORD_PARENT_PATH = input('\n=> ')
+            dump_settings()
     else:
         break
 
@@ -148,7 +173,7 @@ while True:
     try:
         response = requests.get(BD_ASAR_URL)
     except requests.exceptions.ConnectionError:
-        logger.info(f'Failed to download asar. Retrying in 3 seconds...')
+        logger.info('Failed to download asar. Retrying in 3 seconds...')
         time.sleep(3)
     else:
         with open(BD_ASAR_SAVE_PATH, 'wb') as file:
@@ -172,11 +197,18 @@ if is_script_already_patched:
     logger.info('The launch script has already been patched.\n')
 else:
     content.insert(0, f'require("{BD_ASAR_SAVE_PATH}");\n'.encode())
-
     with open(index_js_path, 'wb') as file:
         file.writelines(content)
 
     logger.info('The launch script has been successfully patched.\n')
+
+# Install plugins
+for url, path in zip(PLUGIN_URLS, PLUGIN_SAVE_PATHS):
+    if not os.path.exists(path):
+        logger.info(f'Downloading plugin from {url}...')
+        download_plugin(url, path)
+    else:
+        logger.info(f'Plugin already installed at {path}.\n')
 
 start_discord(DISCORD_PARENT_PATH)
 logger.info('Discord has been started.\n')
