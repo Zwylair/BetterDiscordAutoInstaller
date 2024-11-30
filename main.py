@@ -10,6 +10,7 @@ import subprocess
 
 from funcs import *
 
+
 def dump_settings():
     json.dump(
         {
@@ -21,11 +22,6 @@ def dump_settings():
         open(SETTINGS_PATH, 'w')
     )
 
-def download_plugin(url, save_path):
-    response = requests.get(url)
-    with open(save_path, 'wb') as plugin_file:
-        plugin_file.write(response.content)
-    logger.info(f'Plugin downloaded and saved to {save_path}')
 
 if os.name != 'nt':
     input(
@@ -44,16 +40,6 @@ localappdata = os.getenv('localappdata')
 SETTINGS_PATH = 'settings.json'
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(appdata, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
-PLUGIN_URLS = [
-    'https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js',
-    'https://raw.githubusercontent.com/1Lighty/BetterDiscordPlugins/master/Plugins/1XenoLib.plugin.js',
-    'https://mwittrien.github.io/BetterDiscordAddons/Plugins/PluginRepo/PluginRepo.plugin.js'
-]
-PLUGIN_SAVE_PATHS = [
-    os.path.join(appdata, 'BetterDiscord/plugins/YABDP4Nitro.plugin.js'),
-    os.path.join(appdata, 'BetterDiscord/plugins/PluginRepo.plugin.js'),
-    os.path.join(appdata, 'BetterDiscord/plugins/1XenoLib.plugin.js')
-]
 
 logger.info('BetterDiscordAutoInstaller v1.2.3\n')
 
@@ -200,14 +186,6 @@ else:
         file.writelines(content)
 
     logger.info('The launch script has been successfully patched.\n')
-
-# Install plugins
-for url, path in zip(PLUGIN_URLS, PLUGIN_SAVE_PATHS):
-    if not os.path.exists(path):
-        logger.info(f'Downloading plugin from {url}...')
-        download_plugin(url, path)
-    else:
-        logger.info(f'Plugin already installed at {path}.\n')
 
 start_discord(DISCORD_PARENT_PATH)
 logger.info('Discord has been started.\n')
