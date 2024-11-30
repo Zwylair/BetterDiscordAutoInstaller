@@ -52,8 +52,7 @@ PLUGIN_URLS = [
 PLUGIN_SAVE_PATHS = [
     os.path.join(appdata, 'BetterDiscord/plugins/YABDP4Nitro.plugin.js'),
     os.path.join(appdata, 'BetterDiscord/plugins/PluginRepo.plugin.js'),
-    os.path.join(appdata, 'BetterDiscord/plugins/1XenoLib.plugin.js'),
-    os.path.join(appdata, 'BetterDiscord/plugins/PluginRepo_2.plugin.js')  # Different save path for the second PluginRepo
+    os.path.join(appdata, 'BetterDiscord/plugins/1XenoLib.plugin.js')
 ]
 
 logger.info('BetterDiscordAutoInstaller v1.2.3\n')
