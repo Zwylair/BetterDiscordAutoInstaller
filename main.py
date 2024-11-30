@@ -43,20 +43,20 @@ logger.info('BetterDiscordAutoInstaller v1.2.4\n')
 
 # default settings
 CURRENT_SETTINGS_VERSION = 3
-DISCORD_PARENT_PATH = f'{localappdata}\\Discord'
-DISCORD_PTB_PATH = f'{localappdata}\\DiscordPTB'
-DISCORD_CANARY_PATH = f'{localappdata}\\DiscordCanary'
+DISCORD_PARENT_PATH = f'{localappdata}/Discord'
+DISCORD_PTB_PATH = f'{localappdata}/DiscordPTB'
+DISCORD_CANARY_PATH = f'{localappdata}/DiscordCanary'
 LAST_INSTALLED_DISCORD_VERSION = None
 DISABLE_VERSION_CHECKING = False
 
 if shutil.which('scoop') is not None:
     scoop_info = subprocess.run(['scoop', 'list', 'discord'], capture_output=True, text=True, shell=True).stdout.splitlines()
     discord_line = next((line for line in scoop_info if line.startswith('discord')), None)
-    if discord_line and not glob.glob(f'{home}\\scoop\\apps\\discord*\\current\\discord-portable.exe'):
-        scoop_apps = os.listdir(f'{home}\\scoop\\apps')
+    if discord_line and not glob.glob(f'{home}/scoop/apps/discord*/current/discord-portable.exe'):
+        scoop_apps = os.listdir(f'{home}/scoop/apps')
         for app in scoop_apps:
             if app.startswith('discord'):
-                DISCORD_PARENT_PATH = f'{home}\\scoop\\apps\\{app}\\current'
+                DISCORD_PARENT_PATH = f'{home}/scoop/apps/{app}/current'
                 break
 
 # try to load settings
@@ -83,7 +83,7 @@ while True:
         elif os.path.exists(os.path.join(DISCORD_CANARY_PATH, 'Update.exe')):
             DISCORD_PARENT_PATH = DISCORD_CANARY_PATH
         else:
-            logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}".\nEnter the path to folder with "Update.exe" for normal installations or full path of ~\\scoop\\apps\\discord\\current\\app for scoop installations')
+            logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}".\nEnter the path to folder with "Update.exe" for normal installations or full path of ~/scoop/apps/discord/current/app for scoop installations')
             DISCORD_PARENT_PATH = input('\n=> ')
             dump_settings()
     else:
