@@ -5,6 +5,7 @@ import glob
 import shutil
 import logging
 import requests
+
 from funcs import *
 
 
@@ -38,22 +39,24 @@ SETTINGS_PATH = 'settings.json'
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(appdata, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
 
-logger.info('BetterDiscordAutoInstaller v1.2.3\n')
+logger.info('BetterDiscordAutoInstaller v1.2.4\n')
 
 # default settings
 CURRENT_SETTINGS_VERSION = 3
-DISCORD_PARENT_PATH = f'{localappdata}\\Discord'
+DISCORD_PARENT_PATH = f'{localappdata}/Discord'
+DISCORD_PTB_PATH = f'{localappdata}/DiscordPTB'
+DISCORD_CANARY_PATH = f'{localappdata}/DiscordCanary'
 LAST_INSTALLED_DISCORD_VERSION = None
 DISABLE_VERSION_CHECKING = False
 
 if shutil.which('scoop') is not None:
     scoop_info = subprocess.run(['scoop', 'list', 'discord'], capture_output=True, text=True, shell=True).stdout.splitlines()
     discord_line = next((line for line in scoop_info if line.startswith('discord')), None)
-    if discord_line and not glob.glob(f'{home}\\scoop\\apps\\discord*\\current\\discord-portable.exe'):
-        scoop_apps = os.listdir(f'{home}\\scoop\\apps')
+    if discord_line and not glob.glob(f'{home}/scoop/apps/discord*/current/discord-portable.exe'):
+        scoop_apps = os.listdir(f'{home}/scoop/apps')
         for app in scoop_apps:
             if app.startswith('discord'):
-                DISCORD_PARENT_PATH = f'{home}\\scoop\\apps\\{app}\\current'
+                DISCORD_PARENT_PATH = f'{home}/scoop/apps/{app}/current'
                 break
 
 # try to load settings
@@ -69,14 +72,20 @@ if os.path.exists(SETTINGS_PATH):
         DISABLE_VERSION_CHECKING = settings.get('disable_version_check', DISABLE_VERSION_CHECKING)
 
 latest_installed_discord_version = get_latest_installed_discord_folder_name(DISCORD_PARENT_PATH)
-discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_version)
 
 # get discord location from user if it is invalid
 while True:
+    discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_version)
+
     if not os.path.exists(os.path.join(DISCORD_PARENT_PATH, 'Update.exe')) and not os.path.exists(os.path.join(discord_path, 'Discord.exe')):
-        logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}".\nEnter the path to folder with "Update.exe" for normal installations or full path of ~\\scoop\\apps\\discord\\current\\app for scoop installations:')
-        DISCORD_PARENT_PATH = input('\n=> ')
-        dump_settings()
+        if os.path.exists(os.path.join(DISCORD_PTB_PATH, 'Update.exe')):
+            DISCORD_PARENT_PATH = DISCORD_PTB_PATH
+        elif os.path.exists(os.path.join(DISCORD_CANARY_PATH, 'Update.exe')):
+            DISCORD_PARENT_PATH = DISCORD_CANARY_PATH
+        else:
+            logger.info(f'Discord was not found at "{DISCORD_PARENT_PATH}".\nEnter the path to folder with "Update.exe" for normal installations or full path of ~/scoop/apps/discord/current/app for scoop installations')
+            DISCORD_PARENT_PATH = input('\n=> ')
+            dump_settings()
     else:
         break
 
@@ -148,7 +157,7 @@ while True:
     try:
         response = requests.get(BD_ASAR_URL)
     except requests.exceptions.ConnectionError:
-        logger.info(f'Failed to download asar. Retrying in 3 seconds...')
+        logger.info('Failed to download asar. Retrying in 3 seconds...')
         time.sleep(3)
     else:
         with open(BD_ASAR_SAVE_PATH, 'wb') as file:
@@ -172,7 +181,6 @@ if is_script_already_patched:
     logger.info('The launch script has already been patched.\n')
 else:
     content.insert(0, f'require("{BD_ASAR_SAVE_PATH}");\n'.encode())
-
     with open(index_js_path, 'wb') as file:
         file.writelines(content)
 
