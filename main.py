@@ -5,8 +5,6 @@ import glob
 import shutil
 import logging
 import requests
-import os
-import subprocess
 
 from funcs import *
 
@@ -41,7 +39,7 @@ SETTINGS_PATH = 'settings.json'
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 BD_ASAR_SAVE_PATH = os.path.join(appdata, 'BetterDiscord/data/betterdiscord.asar').replace('\\', '/')
 
-logger.info('BetterDiscordAutoInstaller v1.2.3\n')
+logger.info('BetterDiscordAutoInstaller v1.2.4\n')
 
 # default settings
 CURRENT_SETTINGS_VERSION = 3
@@ -64,7 +62,7 @@ if shutil.which('scoop') is not None:
 # try to load settings
 if os.path.exists(SETTINGS_PATH):
     try:
-        settings = json.load(open(SETTINGS_PATH))
+        settings: dict = json.load(open(SETTINGS_PATH))
     except json.JSONDecodeError:
         logger.info('The settings have been corrupted. Using default values.')
     else:
@@ -74,10 +72,11 @@ if os.path.exists(SETTINGS_PATH):
         DISABLE_VERSION_CHECKING = settings.get('disable_version_check', DISABLE_VERSION_CHECKING)
 
 latest_installed_discord_version = get_latest_installed_discord_folder_name(DISCORD_PARENT_PATH)
-discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_version)
 
 # get discord location from user if it is invalid
 while True:
+    discord_path = os.path.join(DISCORD_PARENT_PATH, latest_installed_discord_version)
+
     if not os.path.exists(os.path.join(DISCORD_PARENT_PATH, 'Update.exe')) and not os.path.exists(os.path.join(discord_path, 'Discord.exe')):
         if os.path.exists(os.path.join(DISCORD_PTB_PATH, 'Update.exe')):
             DISCORD_PARENT_PATH = DISCORD_PTB_PATH
