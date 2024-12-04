@@ -43,6 +43,8 @@ while True:
                 link.description = 'BetterDiscordAutoInstaller v1.2.4'
 
             print('\n.lnk file of the BetterDiscordAutoInstaller was added to startup.\n')
+            break
         case '2':
             os.remove(link_path)
             print('\n.lnk file of the BetterDiscordAutoInstaller was removed from startup.\n')
+            break
