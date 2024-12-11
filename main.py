@@ -3,7 +3,7 @@ from funcs import *  # Import functions from funcs.py
 def main():
     global DISCORD_PARENT_PATH, LAST_INSTALLED_DISCORD_VERSION, DISABLE_VERSION_CHECKING
 
-    logger.info('BetterDiscordAutoInstaller v1.2.4\n')
+    logger.info('BetterDiscordAutoInstaller v1.2.5\n')
 
     DISCORD_PARENT_PATH = find_discord_path()
     if not DISCORD_PARENT_PATH:
