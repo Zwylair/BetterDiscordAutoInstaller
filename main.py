@@ -1,9 +1,3 @@
-import sys
-import time
-import json
-import os
-import subprocess
-import logging
 from funcs import *  # Import functions from funcs.py
 
 def main():
