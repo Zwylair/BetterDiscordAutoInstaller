@@ -11,9 +11,9 @@
 
 ## About
 
-`BetterDiscordAutoInstaller` is a script that works as the official [BetterDiscord installer](https://betterdiscord.app/). This script applies mod on **default** Discord (non canary, etc.). It automatically downloads `betterdiscord.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and adds into loading modules.
+`BetterDiscordAutoInstaller` is a script that do the same work as official [BetterDiscord installer](https://betterdiscord.app/) on applying mod on Discord (PTB, Canary too). It automatically downloads `betterdiscord.asar` file from the official [BetterDiscord GitHub repo](https://github.com/BetterDiscord/BetterDiscord) and makes it load.
 
-Currently, `BetterDiscordAutoInstaller` is supported for **[Windows](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/master)** and **[macOS](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos)** platforms.
+Currently, `BetterDiscordAutoInstaller` is supported for **[Windows](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/master)** and **[macOS](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos)** OSes.
 
 `BetterDiscordAutoInstaller` also allows you to add/remove it from autostart, without having to run it manually every time. For MacOS, the user can also choose to bind script to a keyboard shortcut to manually update.
 
@@ -43,7 +43,7 @@ py startup_manager.py
 
 ### MacOS
 
-You need to move to this [README.md](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos?tab=readme-ov-file#setup-and-dependencies)
+You need to go to [this](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos?tab=readme-ov-file#setup-and-dependencies) README.md
 
 ## Contributing
 

@@ -5,7 +5,7 @@ from cx_Freeze import setup, Executable
 
 setup(
     name='BetterDiscordAutoInstaller',
-    version='1.2.3',
+    version='1.2.4',
     description='',
     executables=[Executable('main.py'), Executable('startup_manager.py')],  # , base=base
 )
