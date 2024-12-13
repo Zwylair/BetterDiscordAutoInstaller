@@ -26,10 +26,10 @@ DISCORD_POSSIBLE_PATHS = [
     os.path.join(LOCALAPPDATA, 'DiscordCanary')
 ]
 
-CURRENT_SETTINGS_VERSION = 3
-DISCORD_PARENT_PATH = None
-LAST_INSTALLED_DISCORD_VERSION = None
-DISABLE_VERSION_CHECKING = False
+CURRENT_SETTINGS_VERSION: int
+DISCORD_PARENT_PATH: str | None
+LAST_INSTALLED_DISCORD_VERSION: str | None
+DISABLE_VERSION_CHECKING: bool
 
 def find_discord_path():
     global DISCORD_PARENT_PATH
@@ -37,6 +37,16 @@ def find_discord_path():
         if os.path.exists(path):
             return path
     return None
+
+def load_settings():
+    global CURRENT_SETTINGS_VERSION, DISCORD_PARENT_PATH, \
+        LAST_INSTALLED_DISCORD_VERSION, DISABLE_VERSION_CHECKING
+
+    settings = json.load(open(SETTINGS_PATH)) if os.path.exists(SETTINGS_PATH) else {}
+    CURRENT_SETTINGS_VERSION = settings.get('settings_version', 3)
+    DISCORD_PARENT_PATH = settings.get('discord_installed_path', None)
+    LAST_INSTALLED_DISCORD_VERSION = settings.get('last_installed_discord_version', None)
+    DISABLE_VERSION_CHECKING = settings.get('disable_version_check', False)
 
 def dump_settings():
     settings = {

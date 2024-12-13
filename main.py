@@ -1,22 +1,22 @@
 from funcs import *  # Import functions from funcs.py
+import funcs  # For editing the variables
 
 def main():
-    global DISCORD_PARENT_PATH, LAST_INSTALLED_DISCORD_VERSION, DISABLE_VERSION_CHECKING
-
     logger.info('BetterDiscordAutoInstaller v1.2.5\n')
 
-    DISCORD_PARENT_PATH = find_discord_path()
-    if not DISCORD_PARENT_PATH:
+    load_settings()
+    funcs.DISCORD_PARENT_PATH = find_discord_path()
+    if not funcs.DISCORD_PARENT_PATH:
         logger.error("No valid Discord installation found.")
-        DISCORD_PARENT_PATH = input("Enter the path to your Discord installation: ").strip()
-        if not os.path.exists(DISCORD_PARENT_PATH):
-            logger.error(f"Invalid path provided: {DISCORD_PARENT_PATH}")
+        funcs.DISCORD_PARENT_PATH = input("Enter the path to your Discord installation: ").strip()
+        if not os.path.exists(funcs.DISCORD_PARENT_PATH):
+            logger.error(f"Invalid path provided: {funcs.DISCORD_PARENT_PATH}")
             sys.exit(1)
 
     try:
-        discord_core_folder = get_latest_installed_discord_folder_name(DISCORD_PARENT_PATH)
-        discord_path = os.path.join(DISCORD_PARENT_PATH, discord_core_folder)
-        LAST_INSTALLED_DISCORD_VERSION = discord_core_folder
+        discord_core_folder = get_latest_installed_discord_folder_name(funcs.DISCORD_PARENT_PATH)
+        discord_path = os.path.join(funcs.DISCORD_PARENT_PATH, discord_core_folder)
+        funcs.LAST_INSTALLED_DISCORD_VERSION = discord_core_folder
         dump_settings()
     except FileNotFoundError as e:
         logger.error(str(e))
@@ -41,7 +41,7 @@ def main():
     install_plugins(PLUGIN_URLS, PLUGIN_SAVE_PATHS, APPDATA)
 
     logger.info("Restarting Discord...")
-    start_discord(DISCORD_PARENT_PATH)
+    start_discord(funcs.DISCORD_PARENT_PATH)
 
     logger.info("Installation complete. Exiting in 3 seconds...")
     time.sleep(3)
