@@ -17,7 +17,7 @@ def main():
         discord_core_folder = get_latest_installed_discord_folder_name(funcs.DISCORD_PARENT_PATH)
         discord_path = os.path.join(funcs.DISCORD_PARENT_PATH, discord_core_folder)
 
-        if discord_core_folder == funcs.LAST_INSTALLED_DISCORD_VERSION:
+        if discord_core_folder == funcs.LAST_INSTALLED_DISCORD_VERSION and not funcs.DISABLE_DISCORD_VERSION_CHECKING:
             logger.info("Discord is already up to date. No update needed. Exiting in 3 seconds...")
             time.sleep(3)
             sys.exit(0)

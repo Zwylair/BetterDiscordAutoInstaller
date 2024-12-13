@@ -28,7 +28,7 @@ DISCORD_POSSIBLE_PATHS = [
 
 DISCORD_PARENT_PATH: str | None
 LAST_INSTALLED_DISCORD_VERSION: str | None
-DISABLE_VERSION_CHECKING: bool
+DISABLE_DISCORD_VERSION_CHECKING: bool
 
 def find_discord_path():
     global DISCORD_PARENT_PATH
@@ -38,18 +38,18 @@ def find_discord_path():
     return None
 
 def load_settings():
-    global DISCORD_PARENT_PATH, LAST_INSTALLED_DISCORD_VERSION, DISABLE_VERSION_CHECKING
+    global DISCORD_PARENT_PATH, LAST_INSTALLED_DISCORD_VERSION, DISABLE_DISCORD_VERSION_CHECKING
 
     settings = json.load(open(SETTINGS_PATH)) if os.path.exists(SETTINGS_PATH) else {}
     DISCORD_PARENT_PATH = settings.get('discord_installed_path', None)
     LAST_INSTALLED_DISCORD_VERSION = settings.get('last_installed_discord_version', None)
-    DISABLE_VERSION_CHECKING = settings.get('disable_version_check', False)
+    DISABLE_DISCORD_VERSION_CHECKING = settings.get('disable_version_check', False)
 
 def dump_settings():
     settings = {
         'discord_installed_path': DISCORD_PARENT_PATH,
         'last_installed_discord_version': LAST_INSTALLED_DISCORD_VERSION,
-        'disable_version_check': DISABLE_VERSION_CHECKING,
+        'disable_version_check': DISABLE_DISCORD_VERSION_CHECKING,
     }
     json.dump(settings, open(SETTINGS_PATH, 'w'))
 
