@@ -1,6 +1,7 @@
 import os
 import sys
 import winshell
+from funcs import BDAI_SCRIPT_VERSION
 
 # Ensure the script is running on Windows
 if os.name != 'nt':
@@ -26,7 +27,7 @@ if getattr(sys, 'frozen', False):
     link_target = os.path.join(link_working_directory, 'main.exe')
     link_arguments = ''
 
-print('BetterDiscordAutoInstaller v1.2.5 (startup_manager)')
+print(f'BetterDiscordAutoInstaller v{BDAI_SCRIPT_VERSION} (startup_manager)')
 
 # Loop for user interaction
 while True:
@@ -45,7 +46,7 @@ while True:
                 link.path = link_target
                 link.arguments = link_arguments
                 link.working_directory = link_working_directory
-                link.description = 'BetterDiscordAutoInstaller v1.2.5'
+                link.description = f'BetterDiscordAutoInstaller v{BDAI_SCRIPT_VERSION}'
             print('\n.lnk file of the BetterDiscordAutoInstaller was added to startup.\n')
 
         except PermissionError:

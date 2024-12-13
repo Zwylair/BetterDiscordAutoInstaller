@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
 
 # Paths and Constants
+BDAI_SCRIPT_VERSION = '1.2.5'
+BDAI_LATEST_RELEASE_REPOSITORY_URL = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/latest'
 SETTINGS_PATH = 'settings.json'
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 APPDATA = os.getenv('appdata')
@@ -29,6 +31,7 @@ DISCORD_POSSIBLE_PATHS = [
 DISCORD_PARENT_PATH: str | None
 LAST_INSTALLED_DISCORD_VERSION: str | None
 DISABLE_DISCORD_VERSION_CHECKING: bool
+DISABLE_BDAI_AUTOUPDATE: bool
 
 def find_discord_path():
     global DISCORD_PARENT_PATH
@@ -38,18 +41,21 @@ def find_discord_path():
     return None
 
 def load_settings():
-    global DISCORD_PARENT_PATH, LAST_INSTALLED_DISCORD_VERSION, DISABLE_DISCORD_VERSION_CHECKING
+    global DISCORD_PARENT_PATH, LAST_INSTALLED_DISCORD_VERSION, \
+        DISABLE_DISCORD_VERSION_CHECKING, DISABLE_BDAI_AUTOUPDATE
 
     settings = json.load(open(SETTINGS_PATH)) if os.path.exists(SETTINGS_PATH) else {}
     DISCORD_PARENT_PATH = settings.get('discord_installed_path', None)
     LAST_INSTALLED_DISCORD_VERSION = settings.get('last_installed_discord_version', None)
     DISABLE_DISCORD_VERSION_CHECKING = settings.get('disable_version_check', False)
+    DISABLE_BDAI_AUTOUPDATE = settings.get('disable_bdai_autoupdate', False)
 
 def dump_settings():
     settings = {
         'discord_installed_path': DISCORD_PARENT_PATH,
         'last_installed_discord_version': LAST_INSTALLED_DISCORD_VERSION,
         'disable_version_check': DISABLE_DISCORD_VERSION_CHECKING,
+        'disable_bdai_autoupdate': DISABLE_BDAI_AUTOUPDATE,
     }
     json.dump(settings, open(SETTINGS_PATH, 'w'))
 
