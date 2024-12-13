@@ -1,21 +1,22 @@
 import os
 import subprocess
+import sys
 import psutil
 import requests
 import glob
 import logging
 import json
 import re
-import time
-import sys
 
 # Configure logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
 
 # Paths and Constants
-BDAI_SCRIPT_VERSION = '1.2.5'
-BDAI_LATEST_RELEASE_REPOSITORY_URL = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/latest'
+BDAI_SCRIPT_VERSION = '1.2.4'
+BDAI_LATEST_RELEASE_PAGE_URL = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/latest'
+BDAI_RAW_RELEASE_URL_TEMPLATE = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/archive/refs/tags/{tag}.zip'
+BDAI_RELEASE_URL_TEMPLATE = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/download/{tag}/BetterDiscordAutoInstaller-{tag}.zip'
 SETTINGS_PATH = 'settings.json'
 BD_ASAR_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar'
 APPDATA = os.getenv('appdata')
@@ -238,3 +239,25 @@ def install_betterdiscord(discord_path: str):
         f.writelines(content)
     
     logger.info(f"Patched {index_js_path} to include BetterDiscord.")
+
+def check_for_updates() -> bool:
+    """Checks for updates and return True if there is an available update, False otherwise"""
+
+    latest_release_url = requests.head(BDAI_LATEST_RELEASE_PAGE_URL, allow_redirects=True)
+    latest_available_version = latest_release_url.url.split('/')[-1].lstrip('v')
+
+    if BDAI_SCRIPT_VERSION != latest_available_version:
+        logger.info(f'A new version available ({BDAI_SCRIPT_VERSION} -> {latest_available_version}).')
+
+        if DISABLE_BDAI_AUTOUPDATE:
+            logger.info(f'To update, go to {BDAI_LATEST_RELEASE_PAGE_URL}\n')
+        return True
+    else:
+        logger.info('BetterDiscordAutoInstaller is up to date.\n')
+        return False
+
+def run_updater():
+    logger.info('Running updater...')
+
+    updater_run_command = ['updater.exe'] if getattr(sys, 'frozen', False) else [sys.executable, 'updater.py']
+    subprocess.run(updater_run_command)

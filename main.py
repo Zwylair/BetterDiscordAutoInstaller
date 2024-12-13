@@ -1,3 +1,4 @@
+import time
 from funcs import *  # Import functions from funcs.py
 import funcs  # For editing the variables
 
@@ -8,7 +9,10 @@ def main():
         logger.error(str(e))
         sys.exit(1)
 
-    logger.info(f'BetterDiscordAutoInstaller v{BDAI_SCRIPT_VERSION}\n')
+    logger.info(f'BetterDiscordAutoInstaller v{BDAI_SCRIPT_VERSION}')
+
+    if check_for_updates() and not funcs.DISABLE_BDAI_AUTOUPDATE:
+        run_updater()
 
     funcs.DISCORD_PARENT_PATH = find_discord_path()
     if not funcs.DISCORD_PARENT_PATH:
