@@ -27,9 +27,9 @@ This repository contains two Python scripts for automatically installing BetterD
 
 #### Installation
 
-Clone the repository and change directory:
+Clone the repository branch for macos and change directory:
 ```bash
-git clone https://github.com/Zwylair/BetterDiscordAutoInstaller
+git clone -b macos https://github.com/Zwylair/BetterDiscordAutoInstaller
 cd BetterDiscordAutoInstaller
 ```
 
