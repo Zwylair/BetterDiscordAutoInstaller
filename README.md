@@ -60,7 +60,7 @@ You can just run this script and it would work. However, that's not ideal. We wa
 cd Projects/BetterDiscordAutoInstaller
 source venv/bin/activate
 pip install -r requirements.txt
-python3 macos/manual-installer-mac.py
+python3 manual-installer-mac.py
 ```
 > Reminder: You can update the manual-installer-mac.py code to give you more or less notifications. Feel free to update the local code according to your preferences.
 7. Update the directory and virtual enviornment name to whatever you used. This example cloned the repo to the "Projects" directory and named the virtual env "venv".
