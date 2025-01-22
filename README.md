@@ -17,6 +17,8 @@ Currently, `BetterDiscordAutoInstaller` is supported for **[Windows](https://git
 
 `BetterDiscordAutoInstaller` also allows you to add/remove it from autostart, without having to run it manually every time. For MacOS, the user can also choose to bind script to a keyboard shortcut to manually update.
 
+The script will check if it is up to date. You can disable autoupdate by changing the `disable_bdai_autoupdate` setting to `true` in the `settings.json` file (you will still receive a message that a new version has been released).
+
 ## Setup and Dependencies
 
 ### Windows
@@ -28,17 +30,17 @@ git clone https://github.com/Zwylair/BetterDiscordAutoInstaller
 
 Install the dependencies:
 ```bash
-py -m pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 Run the script:
 ```bash
-py main.py
+python main.py
 ```
 
 To add BetterDiscordAutoInstaller to your startup apps:
 ```bash
-py startup_manager.py
+python startup_manager.py
 ```
 
 ### MacOS
@@ -60,10 +62,6 @@ That can be fixed. Just need to make sure to have 2 seperate files to allow for 
 Well, just fork it
 
 **But please, don't forget to mention original project in your README**
-
-## Special thanks
-
-**[Ajit Mehrotra](https://github.com/Ajit-Mehrotra)** for adding masOS support
 
 ## License
 This project is under the [MIT license](./LICENSE).
