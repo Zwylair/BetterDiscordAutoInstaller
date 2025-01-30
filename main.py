@@ -11,6 +11,10 @@ def main():
 
     logger.info(f'BetterDiscordAutoInstaller v{BDAI_SCRIPT_VERSION}')
 
+    logger.info('Checking for BetterDiscordAutoInstaller updates...')
+    if check_for_updates() and not funcs.DISABLE_BDAI_AUTOUPDATE:
+        run_updater()
+
     logger.info("Killing any running Discord processes...")
     kill_discord()
     time.sleep(2)
@@ -37,10 +41,6 @@ def main():
     except FileNotFoundError as e:
         logger.error(str(e))
         sys.exit(1)
-
-    logger.info('Checking for BetterDiscordAutoInstaller updates...')
-    if check_for_updates() and not funcs.DISABLE_BDAI_AUTOUPDATE:
-        run_updater()
 
     logger.info("Installing BetterDiscord...")
     install_betterdiscord(discord_path)
