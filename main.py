@@ -11,9 +11,11 @@ def main():
 
     logger.info(f'BetterDiscordAutoInstaller v{BDAI_SCRIPT_VERSION}')
 
-    if check_for_updates() and not funcs.DISABLE_BDAI_AUTOUPDATE:
-        run_updater()
+    logger.info("Killing any running Discord processes...")
+    kill_discord()
+    time.sleep(2)
 
+    logger.info('Checking if Discord is installed and updated...')
     funcs.DISCORD_PARENT_PATH = find_discord_path()
     if not funcs.DISCORD_PARENT_PATH:
         logger.error("No valid Discord installation found.")
@@ -28,12 +30,7 @@ def main():
 
         if discord_core_folder == funcs.LAST_INSTALLED_DISCORD_VERSION and not funcs.DISABLE_DISCORD_VERSION_CHECKING:
             
-            logger.info("Restarting Discord...")
-            start_discord(funcs.DISCORD_PARENT_PATH)
-
-            logger.info("Discord is already up to date. No update needed. Exiting in 3 seconds...")
-            time.sleep(3)
-            sys.exit(0)
+            logger.info("Discord is up to date.")
 
         funcs.LAST_INSTALLED_DISCORD_VERSION = discord_core_folder
         dump_settings()
@@ -41,9 +38,9 @@ def main():
         logger.error(str(e))
         sys.exit(1)
 
-    logger.info("Killing any running Discord processes...")
-    kill_discord()
-    time.sleep(2)
+    logger.info('Checking for BetterDiscordAutoInstaller updates...')
+    if check_for_updates() and not funcs.DISABLE_BDAI_AUTOUPDATE:
+        run_updater()
 
     logger.info("Installing BetterDiscord...")
     install_betterdiscord(discord_path)
