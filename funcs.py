@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
 
 # Paths and Constants
-BDAI_SCRIPT_VERSION = '1.3.0'
+BDAI_SCRIPT_VERSION = '1.3.1'
 BDAI_LATEST_RELEASE_PAGE_URL = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/latest'
+BD_LATEST_RELEASE_PAGE_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest'
 BDAI_RAW_RELEASE_URL_TEMPLATE = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/archive/refs/tags/{tag}.zip'
 BDAI_RELEASE_URL_TEMPLATE = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/download/{tag}/BetterDiscordAutoInstaller-{tag}.zip'
 SETTINGS_PATH = 'settings.json'
@@ -33,6 +34,7 @@ DISCORD_PARENT_PATH: str | None
 LAST_INSTALLED_DISCORD_VERSION: str | None
 DISABLE_DISCORD_VERSION_CHECKING: bool
 DISABLE_BDAI_AUTOUPDATE: bool
+LAST_INSTALLED_BETTERDISCORD_VERSION: str | None
 
 def find_discord_path():
     global DISCORD_PARENT_PATH
@@ -43,22 +45,33 @@ def find_discord_path():
 
 def load_settings():
     global DISCORD_PARENT_PATH, LAST_INSTALLED_DISCORD_VERSION, \
-        DISABLE_DISCORD_VERSION_CHECKING, DISABLE_BDAI_AUTOUPDATE
+        DISABLE_DISCORD_VERSION_CHECKING, DISABLE_BDAI_AUTOUPDATE, LAST_INSTALLED_BETTERDISCORD_VERSION
 
-    settings = json.load(open(SETTINGS_PATH)) if os.path.exists(SETTINGS_PATH) else {}
+    try:
+        settings = json.load(open(SETTINGS_PATH)) if os.path.exists(SETTINGS_PATH) else {}
+    except Exception as e:
+        logger.error(str(e))
+        sys.exit(1)
+
     DISCORD_PARENT_PATH = settings.get('discord_installed_path', None)
     LAST_INSTALLED_DISCORD_VERSION = settings.get('last_installed_discord_version', None)
     DISABLE_DISCORD_VERSION_CHECKING = settings.get('disable_version_check', False)
     DISABLE_BDAI_AUTOUPDATE = settings.get('disable_bdai_autoupdate', False)
+    LAST_INSTALLED_BETTERDISCORD_VERSION = settings.get('last_installed_betterdiscord_version', None)
 
 def dump_settings():
-    settings = {
-        'discord_installed_path': DISCORD_PARENT_PATH,
-        'last_installed_discord_version': LAST_INSTALLED_DISCORD_VERSION,
-        'disable_version_check': DISABLE_DISCORD_VERSION_CHECKING,
-        'disable_bdai_autoupdate': DISABLE_BDAI_AUTOUPDATE,
-    }
-    json.dump(settings, open(SETTINGS_PATH, 'w'))
+    try:
+        settings = {
+            'discord_installed_path': DISCORD_PARENT_PATH,
+            'last_installed_discord_version': LAST_INSTALLED_DISCORD_VERSION,
+            'disable_version_check': DISABLE_DISCORD_VERSION_CHECKING,
+            'disable_bdai_autoupdate': DISABLE_BDAI_AUTOUPDATE,
+            'last_installed_betterdiscord_version': LAST_INSTALLED_BETTERDISCORD_VERSION,
+        }
+        json.dump(settings, open(SETTINGS_PATH, 'w'), indent=2)
+    except FileNotFoundError as e:
+        logger.error(str(e))
+        sys.exit(1)
 
 def download_plugin(url, save_path):
     """Downloads a plugin or library from the specified URL and saves it to the given path."""
@@ -206,6 +219,8 @@ def start_discord(discord_parent_path: str):
     subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 def install_betterdiscord(discord_path: str):
+    global LAST_INSTALLED_BETTERDISCORD_VERSION
+
     appdata = os.getenv('appdata')
     bd_asar_path = os.path.join(appdata, 'BetterDiscord', 'data', 'betterdiscord.asar')
 
@@ -237,7 +252,10 @@ def install_betterdiscord(discord_path: str):
 
     with open(index_js_path, 'wb') as f:
         f.writelines(content)
-    
+
+    LAST_INSTALLED_BETTERDISCORD_VERSION = fetch_latest_betterdiscord_release()
+    dump_settings()
+
     logger.info(f"Patched {index_js_path} to include BetterDiscord.")
 
 def check_for_updates() -> bool:
@@ -261,3 +279,24 @@ def run_updater():
 
     updater_run_command = ['updater.exe'] if getattr(sys, 'frozen', False) else [sys.executable, 'updater.py']
     subprocess.run(updater_run_command)
+
+def fetch_latest_betterdiscord_release() -> str:
+    latest_release_url = requests.head(BD_LATEST_RELEASE_PAGE_URL, allow_redirects=True)
+    return latest_release_url.url.split('/')[-1]
+
+def check_for_betterdiscord_updates() -> bool:
+    """Checks for updates and return True if there is an available update, False otherwise"""
+    return fetch_latest_betterdiscord_release() != LAST_INSTALLED_BETTERDISCORD_VERSION
+
+def is_discord_running() -> bool:
+    for process in psutil.process_iter(['name']):
+        if process.info.get('name') in ['Discord.exe', 'DiscordPTB.exe', 'DiscordCanary.exe']:
+            return True
+    return False
+
+def is_discord_updating(discord_parent_path: str) -> bool:
+    try:
+        with open(os.path.join(discord_parent_path, "Discord_updater_rCURRENT.log")) as updater_log_file:
+            return "Updater main thread exiting" not in updater_log_file.readlines()[-1]
+    except FileNotFoundError:
+        return False
