@@ -293,3 +293,10 @@ def is_discord_running() -> bool:
         if process.info.get('name') in ['Discord.exe', 'DiscordPTB.exe', 'DiscordCanary.exe']:
             return True
     return False
+
+def is_discord_updating(discord_parent_path: str) -> bool:
+    try:
+        with open(os.path.join(discord_parent_path, "Discord_updater_rCURRENT.log")) as updater_log_file:
+            return "Updater main thread exiting" not in updater_log_file.readlines()[-1]
+    except FileNotFoundError:
+        return False

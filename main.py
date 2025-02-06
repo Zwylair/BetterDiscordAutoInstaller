@@ -11,12 +11,6 @@ def main():
     if check_for_updates() and not funcs.DISABLE_BDAI_AUTOUPDATE:
         run_updater()
 
-    if not is_discord_running():
-        logger.info("Discord is not running so I can't make sure it's up to date. You should have Discord open when starting BDAI.")
-        logger.info("Exiting in 3 seconds...")
-        time.sleep(3)
-        sys.exit(0)
-
     logger.info("Retrieving Discord installation folder...")
     funcs.DISCORD_PARENT_PATH = find_discord_path()
     if not funcs.DISCORD_PARENT_PATH:
@@ -26,6 +20,15 @@ def main():
         if not os.path.exists(funcs.DISCORD_PARENT_PATH):
             logger.error(f"Invalid path provided: {funcs.DISCORD_PARENT_PATH}")
             sys.exit(1)
+
+    if not is_discord_running():
+        logger.info("Discord is not running. Starting updater.")
+        start_discord(funcs.DISCORD_PARENT_PATH)
+        time.sleep(1)
+
+        logger.info("Waiting for end of Discord updating.")
+        while is_discord_updating(funcs.DISCORD_PARENT_PATH):
+            time.sleep(0.5)
 
     discord_core_folder = get_latest_installed_discord_folder_name(funcs.DISCORD_PARENT_PATH)
     discord_path = os.path.join(funcs.DISCORD_PARENT_PATH, discord_core_folder)
