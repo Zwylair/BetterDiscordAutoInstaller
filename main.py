@@ -56,12 +56,10 @@ def main():
         install_betterdiscord(discord_path)
 
         PLUGIN_URLS = [
-            'https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js',
-            'https://mwittrien.github.io/BetterDiscordAddons/Plugins/PluginRepo/PluginRepo.plugin.js'
+            'https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js'
         ]
         PLUGIN_SAVE_PATHS = [
-            os.path.join(APPDATA, 'BetterDiscord/plugins/YABDP4Nitro.plugin.js'),
-            os.path.join(APPDATA, 'BetterDiscord/plugins/PluginRepo.plugin.js')
+            os.path.join(APPDATA, 'BetterDiscord/plugins/YABDP4Nitro.plugin.js')
         ]
 
         install_plugins(PLUGIN_URLS, PLUGIN_SAVE_PATHS, APPDATA)
