@@ -41,12 +41,13 @@ def main():
         dump_settings()
 
     is_betterdiscord_up_to_date = not check_for_betterdiscord_updates()
-    if not is_discord_up_to_date or not is_betterdiscord_up_to_date:
+    is_betterdiscord_injected_already = is_betterdiscord_injected(discord_path)
+
+    if not is_discord_up_to_date or not is_betterdiscord_injected_already:
         if not is_discord_up_to_date:
             logger.info("Discord was updated.")
-
-        if not is_betterdiscord_up_to_date:
-            logger.info("Found an available update for BetterDiscord.")
+        if not is_betterdiscord_injected_already:
+            logger.info("BetterDiscord is not injected. Proceeding with patch.")
 
         logger.info("Killing any running Discord processes...")
         kill_discord()
@@ -54,6 +55,9 @@ def main():
 
         logger.info("Installing BetterDiscord...")
         install_betterdiscord(discord_path)
+
+        logger.info("Restarting Discord...")
+        start_discord(funcs.DISCORD_PARENT_PATH)
 
         PLUGIN_URLS = [
             'https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js'
@@ -64,12 +68,19 @@ def main():
 
         install_plugins(PLUGIN_URLS, PLUGIN_SAVE_PATHS, APPDATA)
 
+    elif not is_betterdiscord_up_to_date:
+        logger.info("Killing any running Discord processes...")
+        kill_discord()
+        time.sleep(2)
+        logger.info("BetterDiscord has a new version, updating asar only.")
+        update_betterdiscord_asar_only()
         logger.info("Restarting Discord...")
         start_discord(funcs.DISCORD_PARENT_PATH)
     else:
-        logger.info("BetterDiscord is up to date.")
+        logger.info("BetterDiscord is up to date and injected. No action needed.")
 
     logger.info("Installation complete. Exiting in 3 seconds...")
+
     time.sleep(3)
     sys.exit(0)
 

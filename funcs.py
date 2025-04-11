@@ -218,6 +218,50 @@ def start_discord(discord_parent_path: str):
     logger.info(f"Starting Discord using command: {command}")
     subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+def is_betterdiscord_injected(discord_path: str) -> bool:
+    appdata = os.getenv('appdata')
+    bd_asar_path = os.path.join(appdata, 'BetterDiscord', 'data', 'betterdiscord.asar')
+    bd_asar_path_normalized = bd_asar_path.replace("\\", "/")
+
+    core_path_pattern = os.path.join(discord_path, 'modules/discord_desktop_core-*/discord_desktop_core')
+    core_paths = glob.glob(core_path_pattern)
+
+    if not core_paths:
+        logger.warning("Discord core path not found when checking BetterDiscord injection.")
+        return False
+
+    index_js_path = os.path.join(core_paths[0], 'index.js')
+
+    if not os.path.exists(index_js_path):
+        logger.warning("Discord index.js not found.")
+        return False
+
+    with open(index_js_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+
+    return f'require("{bd_asar_path_normalized}");' in content
+
+def update_betterdiscord_asar_only():
+    global LAST_INSTALLED_BETTERDISCORD_VERSION
+
+    appdata = os.getenv('appdata')
+    bd_asar_path = os.path.join(appdata, 'BetterDiscord', 'data', 'betterdiscord.asar')
+
+    os.makedirs(os.path.dirname(bd_asar_path), exist_ok=True)
+
+    try:
+        logger.info("Downloading BetterDiscord asar...")
+        response = requests.get(BD_ASAR_URL)
+        with open(bd_asar_path, 'wb') as f:
+            f.write(response.content)
+        logger.info("BetterDiscord asar downloaded successfully.")
+
+    except requests.exceptions.ConnectionError:
+        logger.error("Failed to download BetterDiscord asar.")
+
+    LAST_INSTALLED_BETTERDISCORD_VERSION = fetch_latest_betterdiscord_release()
+    dump_settings()
+
 def install_betterdiscord(discord_path: str):
     global LAST_INSTALLED_BETTERDISCORD_VERSION
 
@@ -244,13 +288,19 @@ def install_betterdiscord(discord_path: str):
 
     index_js_path = os.path.join(core_paths[0], 'index.js')
     
-    with open(index_js_path, 'rb') as f:
+    with open(index_js_path, 'r', encoding='utf-8') as f:
         content = f.readlines()
 
     bd_asar_path = bd_asar_path.replace("\\", "/")
-    content.insert(0, f'require("{bd_asar_path}");\n'.encode())
+    require_line = f'require("{bd_asar_path}");\n'
 
-    with open(index_js_path, 'wb') as f:
+    if any(require_line.strip() in line for line in content):
+        logger.info("BetterDiscord is already injected. Skipping patch.")
+        return
+
+    content.insert(0, require_line)
+
+    with open(index_js_path, 'w', encoding='utf-8') as f:
         f.writelines(content)
 
     LAST_INSTALLED_BETTERDISCORD_VERSION = fetch_latest_betterdiscord_release()
