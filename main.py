@@ -1,6 +1,9 @@
 import time
+
 from funcs import *  # Import functions
 import funcs  # For editing the variables
+import plugins
+
 
 def main():
     config.load_settings()
@@ -59,28 +62,30 @@ def main():
         logger.info("Restarting Discord...")
         start_discord(config.DISCORD_PARENT_PATH)
 
-        plugins = [
-            PluginInfo.from_url("https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js")
+        plugins_list = [
+            plugins.PluginInfo.from_url("https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js")
         ]
 
-        for plugin_info in plugins:
-            download_plugin(plugin_info)
+        for plugin_info in plugins_list:
+            plugins.download_plugin(plugin_info)
 
     elif not is_betterdiscord_up_to_date:
         logger.info("Killing any running Discord processes...")
         kill_discord()
         time.sleep(2)
+
         logger.info("BetterDiscord has a new version, updating asar only.")
         update_betterdiscord_asar_only()
+
         logger.info("Restarting Discord...")
         start_discord(config.DISCORD_PARENT_PATH)
     else:
         logger.info("BetterDiscord is up to date and injected. No action needed.")
 
     logger.info("Installation complete. Exiting in 3 seconds...")
-
     time.sleep(3)
     sys.exit(0)
+
 
 if __name__ == "__main__":
     main()
