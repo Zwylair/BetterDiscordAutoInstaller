@@ -11,9 +11,11 @@ import config
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
 
+
 def get_file_path_without_low_level_folder(file_path: str) -> str:
     """Removes "BetterDiscordAutoInstaller-{tag}/" from "BetterDiscordAutoInstaller-{tag}/main.py"-like path"""
     return '/'.join(file_path.split('/')[1:])
+
 
 def download_file(url: str, save_path: str):
     try:
@@ -30,6 +32,7 @@ def download_file(url: str, save_path: str):
         logger.error(f"An error occurred while downloading file: {e}")
         sys.exit(1)
 
+
 def clean_folder(path: str, exclude_files: list = ()):
     try:
         for file in os.listdir(path):
@@ -43,6 +46,7 @@ def clean_folder(path: str, exclude_files: list = ()):
     except Exception as e:
         logger.error(str(e))
         sys.exit(1)
+
 
 def extract_zip(zip_instance: zipfile.ZipFile, target_directory: str = '/'):
     try:
@@ -64,6 +68,7 @@ def extract_zip(zip_instance: zipfile.ZipFile, target_directory: str = '/'):
     except Exception as e:
         logger.error(f'An error occurred while extracting zip: {e}')
         sys.exit(1)
+
 
 def main():
     is_frozen = getattr(sys, 'frozen', False)
@@ -91,6 +96,7 @@ def main():
 
     logger.info(f'Upgraded. Running main executable with command: {main_script_execute_command}\n\n\n')
     subprocess.run(main_script_execute_command)
+
 
 if __name__ == '__main__':
     main()
