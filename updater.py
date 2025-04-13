@@ -5,9 +5,9 @@ import zipfile
 import logging
 import requests
 import subprocess
-from funcs import BDAI_LATEST_RELEASE_PAGE_URL, BDAI_RAW_RELEASE_URL_TEMPLATE, BDAI_RELEASE_URL_TEMPLATE
 
-# Configure logging
+import config
+
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
 
@@ -70,16 +70,16 @@ def main():
     main_script_execute_command = ['main.exe'] if is_frozen else [sys.executable, 'main.py']
     target_directory = './'
 
-    release_url = requests.head(BDAI_LATEST_RELEASE_PAGE_URL, allow_redirects=True).url
+    release_url = requests.head(config.BDAI_LATEST_RELEASE_PAGE_URL, allow_redirects=True).url
     latest_version = release_url.split('/')[-1]
 
     # Download another zip if the user is using a non-compiled BDAI
     if is_frozen:
         save_path = f"BetterDiscordAutoInstaller-{latest_version}.zip"
-        update_package_url = BDAI_RELEASE_URL_TEMPLATE.format(tag=latest_version)
+        update_package_url = config.BDAI_RELEASE_URL_TEMPLATE.format(tag=latest_version)
     else:
         save_path = f'{latest_version}.zip'
-        update_package_url = BDAI_RAW_RELEASE_URL_TEMPLATE.format(tag=latest_version)
+        update_package_url = config.BDAI_RAW_RELEASE_URL_TEMPLATE.format(tag=latest_version)
 
     download_file(update_package_url, save_path)
     logger.info('Downloaded. Upgrading...')
