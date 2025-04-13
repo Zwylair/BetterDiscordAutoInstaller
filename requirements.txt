@@ -1,8 +1,5 @@
 psutil~=5.9.7
-requests~=2.31.0
+requests~=2.32.3
 winshell~=0.6
-certifi==2024.7.4
-charset-normalizer==3.3.2
-idna==3.7
-urllib3==2.2.2
 pypiwin32==223
+cx-freeze
