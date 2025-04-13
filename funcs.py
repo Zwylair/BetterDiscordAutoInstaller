@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
 
 # Paths and Constants
-BDAI_SCRIPT_VERSION = '1.3.2'
+BDAI_SCRIPT_VERSION = '1.3.3'
 BDAI_LATEST_RELEASE_PAGE_URL = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/latest'
 BD_LATEST_RELEASE_PAGE_URL = 'https://github.com/rauenzi/BetterDiscordApp/releases/latest'
 BDAI_RAW_RELEASE_URL_TEMPLATE = 'https://github.com/Zwylair/BetterDiscordAutoInstaller/archive/refs/tags/{tag}.zip'
