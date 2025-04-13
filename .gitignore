@@ -164,4 +164,3 @@ cython_debug/
 test*
 db.sql
 settings.json
-setup.py
