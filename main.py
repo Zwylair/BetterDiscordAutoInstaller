@@ -59,14 +59,12 @@ def main():
         logger.info("Restarting Discord...")
         start_discord(config.DISCORD_PARENT_PATH)
 
-        PLUGIN_URLS = [
-            'https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js'
-        ]
-        PLUGIN_SAVE_PATHS = [
-            os.path.join(config.APPDATA, 'BetterDiscord/plugins/YABDP4Nitro.plugin.js')
+        plugins = [
+            PluginInfo.from_url("https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js")
         ]
 
-        install_plugins(PLUGIN_URLS, PLUGIN_SAVE_PATHS, config.APPDATA)
+        for plugin_info in plugins:
+            download_plugin(plugin_info)
 
     elif not is_betterdiscord_up_to_date:
         logger.info("Killing any running Discord processes...")

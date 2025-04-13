@@ -1,128 +1,68 @@
 import os
-import subprocess
 import sys
-import psutil
-import requests
 import glob
 import logging
-import re
+import subprocess
+from dataclasses import dataclass
+
+import psutil
+import requests
+
 import config
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
+
+
+@dataclass
+class PluginInfo:
+    url: str
+    save_path: str
+    _name: str | None = None
+
+    @staticmethod
+    def from_url(url: str) -> "PluginInfo":
+        return PluginInfo(
+            url=url,
+            save_path=os.path.join(config.APPDATA, "BetterDiscord/plugins", url.split("/")[-1])
+        )
+
+    def get_name(self) -> str:
+        if self._name is None:
+            self._name = self.url.split("/")[-1].replace(".plugin.js",  "")
+        return self._name
+
+    def is_installed(self) -> bool:
+        return os.path.exists(self.save_path)
+
+
+def download_plugin(plugin_info: PluginInfo):
+    if plugin_info.is_installed():
+        logger.info(f"Plugin {plugin_info.get_name()} already exists.")
+        return
+
+    plugin_dir = os.path.dirname(plugin_info.save_path)
+    if not os.path.exists(plugin_dir):
+        os.makedirs(plugin_dir)
+
+    try:
+        logger.info(f"Downloading {plugin_info.get_name()}...")
+
+        response = requests.get(plugin_info.url)
+        if response.status_code != 200:
+            logger.error(f"Failed to download plugin from {plugin_info.url}: {response.status_code}")
+            return
+
+        with open(plugin_info.save_path, 'wb') as plugin_file:
+            plugin_file.write(response.content)
+    except Exception as e:
+        logger.error(f"An error occurred while downloading the plugin: {e}")
 
 def find_discord_path():
     for path in config.DISCORD_POSSIBLE_PATHS:
         if os.path.exists(path):
             return path
     return None
-
-def download_plugin(url, save_path):
-    """Downloads a plugin or library from the specified URL and saves it to the given path."""
-    plugin_dir = os.path.dirname(save_path)
-    if not os.path.exists(plugin_dir):
-        os.makedirs(plugin_dir)  # Create the necessary directories
-
-    if os.path.exists(save_path):
-        logger.info(f"Plugin already exists at {save_path}. Skipping download.")
-        return  # Skip download if the plugin already exists
-
-    try:
-        logger.info(f"Downloading from {url} to {save_path}...")
-        response = requests.get(url)
-        if response.status_code == 200:
-            with open(save_path, 'wb') as plugin_file:
-                plugin_file.write(response.content)
-            logger.info(f'Plugin or library downloaded and saved to {save_path}')
-        else:
-            logger.error(f"Failed to download plugin or library from {url}. HTTP status code: {response.status_code}")
-    except requests.exceptions.RequestException as e:
-        logger.error(f"An error occurred while downloading the plugin or library: {e}")
-
-def extract_dependencies_from_description(description):
-    """Extracts and returns the dependencies from the plugin description, including libraries."""
-    dependencies = []
-
-    if 'depends on' in description.lower():
-        start = description.lower().find('depends on') + len('depends on')
-        end = description.find('\n', start)
-        dependency_info = description[start:end].strip()
-        
-        if dependency_info:
-            if not dependency_info.startswith("http"):
-                dependency_info = f"https://{dependency_info}"
-            dependencies.append(dependency_info)
-
-    plugin_regex = r'https?://[^\s"]+\.plugin\.js'  
-    found_plugins = re.findall(plugin_regex, description)
-
-    if found_plugins:
-        dependencies.extend(found_plugins)
-
-    return dependencies
-
-def check_and_download_dependencies(plugin_name, description, appdata):
-    """Checks and downloads missing dependencies for a plugin by analyzing the description."""
-    dependencies = extract_dependencies_from_description(description)
-    
-    for dependency_url in dependencies:
-        if '${name}' in dependency_url:
-            dependency_url = dependency_url.replace('${name}', plugin_name)
-        
-        dependency_name = dependency_url.split("/")[-1]
-        
-        # Check if the dependency is already installed
-        if is_dependency_installed(dependency_name, appdata):
-            logger.info(f"Dependency {dependency_name} for {plugin_name} is already installed. Skipping download.")
-            continue  # Skip downloading this dependency if it's already installed
-        
-        dependency_path = os.path.join(appdata, 'BetterDiscord/plugins', dependency_name)
-        
-        logger.info(f"Downloading missing dependency: {dependency_name} for {plugin_name}...")
-        download_plugin(dependency_url, dependency_path)
-
-def is_plugin_installed(plugin_name, appdata):
-    """Checks if the given plugin is already installed."""
-    plugin_path = os.path.join(appdata, 'BetterDiscord/plugins', f"{plugin_name}.plugin.js")
-    logger.info(f"Checking if plugin {plugin_name} is installed at {plugin_path}...")
-    return os.path.exists(plugin_path)
-
-def is_dependency_installed(dependency_name, appdata):
-    """Checks if a given dependency is already installed."""
-    dependency_path = os.path.join(appdata, 'BetterDiscord/plugins', f"{dependency_name}")
-    logger.info(f"Checking if dependency {dependency_name} is installed at {dependency_path}...")
-    return os.path.exists(dependency_path)
-
-def install_plugins(plugin_urls, plugin_save_paths, appdata):
-    """Handles plugin installation, including downloading and checking dependencies."""
-    for url, path in zip(plugin_urls, plugin_save_paths):
-        plugin_name = url.split("/")[-1].replace(".plugin.js", "")
-        
-        # Skip if the plugin is already installed
-        if is_plugin_installed(plugin_name, appdata):
-            logger.info(f"Plugin {plugin_name} is already installed. Skipping...")
-            continue  # Skip this plugin and move to the next
-        
-        # Fetch the plugin description
-        plugin_description = get_plugin_description(url)
-        check_and_download_dependencies(plugin_name, plugin_description, appdata)  # Check and download dependencies
-
-        # Download the plugin itself if not already installed
-        logger.info(f'Downloading plugin from {url} to {path}...')
-        download_plugin(url, path)
-
-def get_plugin_description(url):
-    """Fetches the description of a plugin (simulated in this case)."""
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.text
-        else:
-            logger.error(f"Failed to fetch plugin description from {url}")
-            return ""
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error retrieving plugin description: {e}")
-        return ""
 
 def get_latest_installed_discord_folder_name(discord_parent_path: str) -> str:
     if not os.path.exists(discord_parent_path):
