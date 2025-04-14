@@ -19,8 +19,9 @@ def main():
 
     if getattr(sys, "frozen", False):
         link_working_directory = os.path.dirname(sys.executable)
-        link_target = os.path.join(link_working_directory, "main.exe")
-        link_arguments = ""
+        link_working_directory = os.path.split(link_working_directory)[0]  # a/b/c/ -> a/b/
+        link_target = os.path.join(link_working_directory, "updater.exe")
+        link_arguments = "--run"
     else:
         link_working_directory = os.path.dirname(__file__)
         link_target = sys.executable

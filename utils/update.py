@@ -1,3 +1,4 @@
+import os
 import sys
 import logging
 import subprocess
@@ -54,5 +55,9 @@ def check_for_bdai_updates() -> bool:
 def run_updater():
     logger.info('Running updater...')
 
-    updater_run_command = ['updater.exe'] if getattr(sys, 'frozen', False) else [sys.executable, 'updater.py']
+    if getattr(sys, 'frozen', False):
+        updater_run_command = ['updater.exe']
+        os.chdir("../")
+    else:
+        updater_run_command = [sys.executable, 'updater.py']
     subprocess.run(updater_run_command)
