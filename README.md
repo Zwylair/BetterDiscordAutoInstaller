@@ -19,8 +19,6 @@ Currently, `BetterDiscordAutoInstaller` is supported for **[Windows](https://git
 
 The script will check if it is up to date. You can disable autoupdate by changing the `disable_bdai_autoupdate` setting to `true` in the `settings.json` file (you will still receive a message that a new version has been released).
 
----
-
 ## Setup and Dependencies
 
 ### Windows
@@ -33,16 +31,12 @@ To add BetterDiscordAutoInstaller to your startup apps: `python startup_manager.
 ### MacOS
 You need to go to [this](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos?tab=readme-ov-file#setup-and-dependencies) README.md
 
----
-
 ## Building
 
 ### Windows
 - Clone the repository: `git clone https://github.com/Zwylair/BetterDiscordAutoInstaller.git`
 - Install the dependencies: `python -m pip install -r requirements.txt`
 - Run the build script: `python setup.py build`
-
----
 
 ## Contributing
 I will be grateful for any contribution and help given to improve the quality of the project :)
@@ -58,8 +52,6 @@ That can be fixed. Just need to make sure to have 2 separate files to allow for 
 Well, just fork it
 
 **But please, don't forget to mention original project in your README**
-
----
 
 ## License
 This project is under the [MIT license](./LICENSE).
