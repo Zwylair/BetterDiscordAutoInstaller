@@ -7,38 +7,14 @@ import requests
 import subprocess
 
 import config
+from utils import backslash_path, is_version_greater
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 
-def is_version_greater(first_version: str, second_version: str) -> bool:
-    first = first_version.split(".")
-    second = second_version.split(".")
-
-    try:
-        first = list(map(lambda i: int(i), first))
-        second = list(map(lambda i: int(i), second))
-    except ValueError:
-        print("One of the versions does not match the n.n.n-like version template")
-        return False
-
-    if len(first) > len(second):
-        second += [0] * (len(first) - len(second))
-    elif len(second) > len(first):
-        first += [0] * (len(second) - len(first))
-
-    for first_version_number, second_version_number in zip(first, second):
-        if first_version_number > second_version_number:
-            return True
-        elif second_version_number > first_version_number:
-            return False
-    return False
-
-
-def get_file_path_without_low_level_folder(file_path: str) -> str:
-    """Removes "BetterDiscordAutoInstaller-{tag}/" from "BetterDiscordAutoInstaller-{tag}/main.py"-like path"""
-    return "/".join(file_path.split("/")[1:])
+def get_path_without_parent_dir(file_path: str) -> str:
+    return "/".join(backslash_path(file_path).split("/")[1:])
 
 
 def download_file(url: str, save_path: str):
@@ -60,18 +36,27 @@ def clean_folder(path: str, exclude_files: list = ()):
         if file in exclude_files:
             continue
 
+        file_path = os.path.abspath(os.path.join(path, file))
+
         try:
-            os.remove(file) if os.path.isfile(file) else shutil.rmtree(file)
+            os.remove(file_path) if os.path.isfile(file_path) else shutil.rmtree(file_path)
         except Exception as e:
             logger.error(f"An error occurred while cleaning the {path}: {e}")
 
 
-def extract_zip(zip_instance: zipfile.ZipFile, target_directory: str):
+def extract_zip(zip_instance: zipfile.ZipFile, target_directory: str, exclude_files: tuple[str, ...] = ()):
     for zip_file in zip_instance.filelist:
         if zip_file.is_dir():
             continue
 
-        target_filename = get_file_path_without_low_level_folder(zip_file.filename)
+        filename = backslash_path(zip_file.filename)
+        if filename in exclude_files:
+            continue
+
+        target_filename = get_path_without_parent_dir(filename)
+        if not target_filename:
+            continue
+
         target_path = os.path.join(target_directory, target_filename)
         os.makedirs(os.path.dirname(target_path), exist_ok=True)
 
@@ -128,7 +113,7 @@ def main():
         clean_folder(target_directory)
 
     logger.info("Unpacking...")
-    extract_zip(update_package, target_directory)
+    extract_zip(update_package, target_directory, exclude_files=("updater.exe", ))
     update_package.close()
 
     logger.info("Cleaning up...")
