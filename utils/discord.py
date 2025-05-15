@@ -66,8 +66,10 @@ def is_discord_running() -> bool:
 
 
 def is_discord_updating(discord_parent_path: str) -> bool:
+    discord_logs_file_path = os.path.join(discord_parent_path, "Discord_updater_rCURRENT.log")
+
     try:
-        with open(os.path.join(discord_parent_path, "Discord_updater_rCURRENT.log")) as updater_log_file:
+        with open(discord_logs_file_path, encoding="utf-8", errors="replace") as updater_log_file:
             return "Updater main thread exiting" not in updater_log_file.readlines()[-1]
     except FileNotFoundError:
         return False
