@@ -5,7 +5,7 @@ import requests
 from plugins.classes import *
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
+logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 
 def download_plugin(plugin_info: PluginInfo):
@@ -25,7 +25,7 @@ def download_plugin(plugin_info: PluginInfo):
             logger.error(f"Failed to download plugin from {plugin_info.url}: {response.status_code}")
             return
 
-        with open(plugin_info.save_path, 'wb') as plugin_file:
+        with open(plugin_info.save_path, "wb") as plugin_file:
             plugin_file.write(response.content)
     except Exception as e:
         logger.error(f"An error occurred while downloading the plugin: {e}")

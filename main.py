@@ -8,27 +8,31 @@ import config
 import plugins
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format='(%(asctime)s) %(message)s')
+logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 
 def main():
     config.load_settings()
+    force_update_flag = "--force" in sys.argv
 
-    logger.info(f'BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}')
+    logger.info(f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}")
 
-    logger.info('Checking for BetterDiscordAutoInstaller updates...')
+    logger.info("Checking for BetterDiscordAutoInstaller updates...")
     if utils.check_for_bdai_updates() and not config.DISABLE_BDAI_AUTOUPDATE:
         utils.run_updater()
 
     logger.info("Retrieving Discord installation folder...")
-    config.DISCORD_PARENT_PATH = utils.find_discord_path()
     if not config.DISCORD_PARENT_PATH:
-        logger.error("No valid Discord installation found.")
+        config.DISCORD_PARENT_PATH = utils.find_discord_path()
 
-        config.DISCORD_PARENT_PATH = input("Enter the path to your Discord installation: ").strip()
-        if not os.path.exists(config.DISCORD_PARENT_PATH):
-            logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
-            sys.exit(1)
+        if not config.DISCORD_PARENT_PATH:
+            logger.error("No valid Discord installation found.")
+
+            config.DISCORD_PARENT_PATH = input("Enter the path to your Discord installation: ").strip()
+            if not os.path.exists(config.DISCORD_PARENT_PATH):
+                logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
+                sys.exit(1)
+    logger.info(f"Processing Discord installation: {config.DISCORD_PARENT_PATH}")
 
     if not utils.is_discord_running():
         logger.info("Discord is not running. Starting updater.")
@@ -52,14 +56,16 @@ def main():
     is_betterdiscord_up_to_date = not utils.check_for_betterdiscord_updates()
     is_betterdiscord_injected_already = utils.is_betterdiscord_injected(discord_path)
 
-    if not is_discord_up_to_date or not is_betterdiscord_injected_already:
+    if not is_discord_up_to_date or not is_betterdiscord_injected_already or force_update_flag:
         if not is_discord_up_to_date:
             logger.info("Discord was updated.")
         if not is_betterdiscord_injected_already:
             logger.info("BetterDiscord is not injected. Proceeding with patch.")
+        if force_update_flag:
+            logger.info("Force updating BetterDiscord.")
 
         logger.info("Killing any running Discord processes...")
-        utils.kill_discord()
+        utils.kill_discord(discord_path)
         time.sleep(2)
 
         logger.info("Installing BetterDiscord...")
@@ -75,9 +81,9 @@ def main():
         for plugin_info in plugins_list:
             plugins.download_plugin(plugin_info)
 
-    elif not is_betterdiscord_up_to_date:
+    elif not is_betterdiscord_up_to_date or force_update_flag:
         logger.info("Killing any running Discord processes...")
-        utils.kill_discord()
+        utils.kill_discord(discord_path)
         time.sleep(2)
 
         logger.info("BetterDiscord has a new version, updating asar only.")
