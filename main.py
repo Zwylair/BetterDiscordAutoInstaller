@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 def main():
     config.load_settings()
+    config.load_github_token()
     force_update_flag = "--force" in sys.argv
 
     logger.info(f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}")
@@ -53,23 +54,24 @@ def main():
         config.LAST_INSTALLED_DISCORD_VERSION = discord_core_folder
         config.dump_settings()
 
-    is_betterdiscord_up_to_date = not utils.check_for_betterdiscord_updates()
-    is_betterdiscord_injected_already = utils.is_betterdiscord_injected(discord_path)
+    bd_release_tag = utils.get_release_tag(config.USE_BD_CI_RELEASES)
+    is_bd_up_to_date = utils.check_for_bd_ci_updates() if config.USE_BD_CI_RELEASES else not utils.check_for_bd_updates()
+    is_bd_injected_already = utils.is_bd_injected(discord_path, is_ci=config.USE_BD_CI_RELEASES)
 
-    if not is_discord_up_to_date or not is_betterdiscord_injected_already or force_update_flag:
+    if not is_discord_up_to_date or not is_bd_injected_already or force_update_flag:
         if not is_discord_up_to_date:
             logger.info("Discord was updated.")
-        if not is_betterdiscord_injected_already:
-            logger.info("BetterDiscord is not injected. Proceeding with patch.")
+        if not is_bd_injected_already:
+            logger.info(f"BetterDiscord {bd_release_tag} is not injected. Proceeding with patch.")
         if force_update_flag:
-            logger.info("Force updating BetterDiscord.")
+            logger.info(f"Force updating BetterDiscord {bd_release_tag}.")
 
         logger.info("Killing any running Discord processes...")
         utils.kill_discord(discord_path)
         time.sleep(2)
 
-        logger.info("Installing BetterDiscord...")
-        utils.install_betterdiscord(discord_path)
+        logger.info(f"Installing BetterDiscord {bd_release_tag}...")
+        utils.install_bd(discord_path, is_ci=config.USE_BD_CI_RELEASES)
 
         logger.info("Restarting Discord...")
         utils.start_discord(config.DISCORD_PARENT_PATH)
@@ -81,18 +83,18 @@ def main():
         for plugin_info in plugins_list:
             plugins.download_plugin(plugin_info)
 
-    elif not is_betterdiscord_up_to_date or force_update_flag:
+    elif not is_bd_up_to_date or force_update_flag:
         logger.info("Killing any running Discord processes...")
         utils.kill_discord(discord_path)
         time.sleep(2)
 
-        logger.info("BetterDiscord has a new version, updating asar only.")
-        utils.update_betterdiscord_asar_only()
+        logger.info(f"BetterDiscord {bd_release_tag} has a new version, updating asar only.")
+        utils.update_bd_asar_only(is_ci=config.USE_BD_CI_RELEASES)
 
         logger.info("Restarting Discord...")
         utils.start_discord(config.DISCORD_PARENT_PATH)
     else:
-        logger.info("BetterDiscord is up to date and injected. No action needed.")
+        logger.info(f"BetterDiscord {bd_release_tag} is up to date and injected. No action needed.")
 
     logger.info("Installation complete. Exiting in 3 seconds...")
     time.sleep(3)

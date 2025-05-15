@@ -1,0 +1,11 @@
+from typing import Optional
+
+DISABLE_DISCORD_VERSION_CHECKING: bool = False
+DISABLE_BDAI_AUTOUPDATE: bool = False
+USE_BD_CI_RELEASES: bool = False
+GITHUB_TOKEN: Optional[str] = None
+
+DISCORD_PARENT_PATH: Optional[str] = None
+LAST_INSTALLED_DISCORD_VERSION: Optional[str] = None
+LAST_INSTALLED_BD_VERSION: Optional[str] = None
+LAST_INSTALLED_BD_CI_VERSION: Optional[str] = None

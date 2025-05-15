@@ -5,15 +5,26 @@ import logging
 import requests
 
 import config
+import utils
 from utils.other import backslash_path
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 
-def is_betterdiscord_injected(discord_path: str) -> bool:
-    appdata = os.getenv("appdata")
-    bd_asar_path_normalized = backslash_path(os.path.join(appdata, "BetterDiscord", "data", "betterdiscord.asar"))
+def get_asar_path(is_ci: bool) -> str:
+    return backslash_path(config.BD_CI_ASAR_PATH if is_ci else config.BD_ASAR_PATH)
+
+
+def get_require_line(is_ci: bool) -> str:
+    return f'require("{get_asar_path(is_ci)}");\n'
+
+
+def get_release_tag(is_ci: bool) -> str:
+    return "CI" if is_ci else "Stable"
+
+
+def is_bd_injected(discord_path: str, is_ci: bool) -> bool:
     core_path_pattern = os.path.join(discord_path, "modules/discord_desktop_core-*/discord_desktop_core")
     core_paths = glob.glob(core_path_pattern)
 
@@ -29,32 +40,37 @@ def is_betterdiscord_injected(discord_path: str) -> bool:
     with open(index_js_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    return f'require("{bd_asar_path_normalized}");' in content
+    return f'require("{get_asar_path(is_ci)}");' in content
 
 
-def update_betterdiscord_asar_only():
-    bd_asar_path = os.path.join(config.APPDATA, "BetterDiscord", "data", "betterdiscord.asar")
+def update_bd_asar_only(is_ci: bool):
+    if is_ci:
+        if update_bd_ci_asar():
+            logger.info("BetterDiscord CI has been updated successfully.")
+            return
 
-    os.makedirs(os.path.dirname(bd_asar_path), exist_ok=True)
+        logger.info("BetterDiscord CI update failed.")
+        return
+
+    os.makedirs(os.path.dirname(config.BD_ASAR_PATH), exist_ok=True)
 
     try:
-        logger.info("Downloading BetterDiscord asar...")
+        logger.info("Downloading BetterDiscord Stable asar...")
         response = requests.get(config.BD_ASAR_URL)
-        with open(bd_asar_path, "wb") as f:
+        with open(config.BD_ASAR_PATH, "wb") as f:
             f.write(response.content)
-        logger.info("BetterDiscord asar downloaded successfully.")
+        logger.info("BetterDiscord Stable asar downloaded successfully.")
 
     except requests.exceptions.ConnectionError:
-        logger.error("Failed to download BetterDiscord asar.")
+        logger.error("Failed to download BetterDiscord Stable asar.")
 
-    config.LAST_INSTALLED_BETTERDISCORD_VERSION = fetch_latest_betterdiscord_release()
+    config.LAST_INSTALLED_BD_VERSION = fetch_latest_bd_release()
     config.dump_settings()
 
 
-def install_betterdiscord(discord_path: str):
-    update_betterdiscord_asar_only()
+def install_bd(discord_path: str, is_ci: bool):
+    update_bd_asar_only(is_ci)
 
-    bd_asar_path = os.path.join(config.APPDATA, "BetterDiscord", "data", "betterdiscord.asar")
     core_path_pattern = os.path.join(discord_path, "modules/discord_desktop_core-*/discord_desktop_core")
     core_paths = glob.glob(core_path_pattern)
 
@@ -66,11 +82,17 @@ def install_betterdiscord(discord_path: str):
     with open(index_js_path, "r", encoding="utf-8") as f:
         content = f.readlines()
 
-    bd_asar_path = bd_asar_path.replace("\\", "/")
-    require_line = f'require("{bd_asar_path}");\n'
+    require_line = get_require_line(is_ci)
+    other_release_require_line = get_require_line(not is_ci)
+    release_tag = get_release_tag(is_ci)
+    other_release_tag = get_release_tag(not is_ci)
+
+    if any(other_release_require_line.strip() in line for line in content):
+        logger.info(f"Found BetterDiscord {other_release_tag} injection. Removing it.")
+        content = utils.remove_item_from_list(other_release_require_line, content)
 
     if any(require_line.strip() in line for line in content):
-        logger.info("BetterDiscord is already injected. Skipping patch.")
+        logger.info(f"BetterDiscord {release_tag} is already injected. Skipping patch.")
         return
 
     content.insert(0, require_line)
@@ -78,14 +100,41 @@ def install_betterdiscord(discord_path: str):
     with open(index_js_path, "w", encoding="utf-8") as f:
         f.writelines(content)
 
-    logger.info(f"Patched {index_js_path} to include BetterDiscord.")
+    logger.info(f"Patched {index_js_path} to include BetterDiscord {release_tag}.")
 
 
-def fetch_latest_betterdiscord_release() -> str:
+def fetch_latest_bd_release() -> str:
     latest_release_url = requests.head(config.BD_LATEST_RELEASE_PAGE_URL, allow_redirects=True)
     return latest_release_url.url.split("/")[-1]
 
 
-def check_for_betterdiscord_updates() -> bool:
+def check_for_bd_updates() -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
-    return fetch_latest_betterdiscord_release() != config.LAST_INSTALLED_BETTERDISCORD_VERSION
+    return fetch_latest_bd_release() != config.LAST_INSTALLED_BD_VERSION
+
+
+def check_for_bd_ci_updates() -> bool:
+    """Checks for updates and return True if there is an available update, False otherwise"""
+    return utils.get_last_successful_run_id() != config.LAST_INSTALLED_BD_CI_VERSION
+
+
+def update_bd_ci_asar() -> bool:
+    run_id = utils.get_last_successful_run_id()
+    if not run_id:
+        return False
+
+    artifacts = utils.get_artifacts_from_run(run_id)
+    if not artifacts:
+        return False
+
+    artifact = utils.find_artefact(artifacts)
+    if not artifact:
+        return False
+
+    success = utils.download_artifact(artifact)
+    if not success:
+        return False
+
+    config.LAST_INSTALLED_BD_CI_VERSION = run_id
+    config.dump_settings()
+    return True
