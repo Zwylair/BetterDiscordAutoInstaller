@@ -15,7 +15,9 @@ BD_LATEST_RELEASE_PAGE_URL = "https://github.com/rauenzi/BetterDiscordApp/releas
 BD_ASAR_URL = "https://github.com/rauenzi/BetterDiscordApp/releases/latest/download/betterdiscord.asar"
 BD_ASAR_PATH = os.path.join(APPDATA, "BetterDiscord", "data", "betterdiscord.asar")
 BD_CI_ASAR_PATH = os.path.join(APPDATA, "BetterDiscord", "data", "betterdiscord-ci.asar")
-BD_CI_WORKFLOWS_URL = "https://api.github.com/repos/BetterDiscord/BetterDiscord/actions/workflows/ci.yml/runs"
+BD_CI_WORKFLOW_AUTHOR = "BetterDiscord CI"
+BD_CI_WORKFLOW_REPO = "BetterDiscord/BetterDiscord"
+BD_CI_WORKFLOWS_RUNS_URL = f"https://api.github.com/repos/{BD_CI_WORKFLOW_REPO}/actions/workflows/ci.yml/runs"
 
 DISCORD_POSSIBLE_PATHS = [
     os.path.join(LOCALAPPDATA, "Discord"),

@@ -108,22 +108,22 @@ def fetch_latest_bd_release() -> str:
     return latest_release_url.url.split("/")[-1]
 
 
-def check_for_bd_updates() -> bool:
+def check_for_bd_updates(is_ci: bool) -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
-    return fetch_latest_bd_release() != config.LAST_INSTALLED_BD_VERSION
+    return check_for_bd_ci_updates() if is_ci else fetch_latest_bd_release() != config.LAST_INSTALLED_BD_VERSION
 
 
 def check_for_bd_ci_updates() -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
-    return utils.get_last_successful_run_id() != config.LAST_INSTALLED_BD_CI_VERSION
+    return utils.get_last_successful_run_id(config.BD_CI_WORKFLOWS_RUNS_URL, config.BD_CI_WORKFLOW_AUTHOR) != config.LAST_INSTALLED_BD_CI_VERSION
 
 
 def update_bd_ci_asar() -> bool:
-    run_id = utils.get_last_successful_run_id()
+    run_id = utils.get_last_successful_run_id(config.BD_CI_WORKFLOWS_RUNS_URL, config.BD_CI_WORKFLOW_AUTHOR)
     if not run_id:
         return False
 
-    artifacts = utils.get_artifacts_from_run(run_id)
+    artifacts = utils.get_artifacts_from_run(config.BD_CI_WORKFLOW_REPO, config.BD_CI_WORKFLOW_AUTHOR, run_id)
     if not artifacts:
         return False
 

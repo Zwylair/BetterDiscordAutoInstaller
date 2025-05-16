@@ -55,7 +55,7 @@ def main():
         config.dump_settings()
 
     bd_release_tag = utils.get_release_tag(config.USE_BD_CI_RELEASES)
-    is_bd_up_to_date = utils.check_for_bd_ci_updates() if config.USE_BD_CI_RELEASES else not utils.check_for_bd_updates()
+    is_bd_up_to_date = utils.check_for_bd_updates(config.USE_BD_CI_RELEASES)
     is_bd_injected_already = utils.is_bd_injected(discord_path, is_ci=config.USE_BD_CI_RELEASES)
 
     if not is_discord_up_to_date or not is_bd_injected_already or force_update_flag:

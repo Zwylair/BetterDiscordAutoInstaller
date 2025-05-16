@@ -34,16 +34,16 @@ def get_headers():
     }
 
 
-def get_last_successful_run_id(limit: int = 5) -> Optional[str]:
-    logger.info(f"Trying to get last {limit} runs from BetterDiscord CI...")
+def get_last_successful_run_id(workflows_url: str, workflow_author: str, limit: int = 5) -> Optional[str]:
+    logger.info(f"Trying to get last {limit} runs from {workflow_author}...")
 
     try:
-        runs_resp = requests.get(config.BD_CI_WORKFLOWS_URL, headers=get_headers() | {"per_page": str(limit)})
+        runs_resp = requests.get(workflows_url, headers=get_headers() | {"per_page": str(limit)})
         runs_resp.raise_for_status()
         workflow_runs = runs_resp.json()["workflow_runs"][:limit]
 
         for run in workflow_runs:
-            if run.get("name") != "BetterDiscord CI":
+            if run.get("name") != workflow_author:
                 continue
 
             if run.get("conclusion") != "success":
@@ -51,19 +51,18 @@ def get_last_successful_run_id(limit: int = 5) -> Optional[str]:
 
             return run["id"]
         else:
-            logger.warning(f"No successful runs in latest {limit} BetterDiscord CI builds.")
+            logger.warning(f"No successful runs in latest {limit} {workflow_author} builds.")
             return None
     except Exception as e:
         logger.error(str(e), exc_info=e)
         return None
 
 
-def get_artifacts_from_run(run_id: str) -> Optional[dict]:
-    logger.info(f"Trying to get artifacts from BetterDiscord CI run (id: {run_id})...")
+def get_artifacts_from_run(repo: str, author: str, run_id: str) -> Optional[dict]:
+    logger.info(f"Trying to get artifacts from {author} run (id: {run_id})...")
 
     try:
-        artifacts_url = f"https://api.github.com/repos/BetterDiscord/BetterDiscord/actions/runs/{run_id}/artifacts"
-        arts_resp = requests.get(artifacts_url, headers=get_headers())
+        arts_resp = requests.get(f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts", headers=get_headers())
         arts_resp.raise_for_status()
         return arts_resp.json()["artifacts"]
     except Exception as e:
@@ -94,8 +93,8 @@ def download_artifact(artifact: dict) -> bool:
                     f.write(z.read(name))
                 break
             else:
-                raise Exception("BetterDiscord CI asar file was not found in artefact archive.")
-        logger.info("BetterDiscord CI asar has been successfully downloaded.")
+                raise Exception("Artifact file was not found in workflow archive.")
+        logger.info("Artifact has been successfully downloaded.")
         return True
 
     except requests.exceptions.HTTPError as e:
