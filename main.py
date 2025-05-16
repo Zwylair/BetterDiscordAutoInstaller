@@ -109,9 +109,10 @@ def main():
                 utils.update_bd_asar_only(config.USE_BD_CI_RELEASES)
                 bd_has_updates = False
 
-            logger.info("")
-            logger.info(f"Restarting {discord_edition}...")
-            utils.start_discord(discord_edition, discord_parent_path)
+            if discord_edition.to_str() == config.RERUN_DISCORD_EDITION:
+                logger.info("")
+                logger.info(f"Restarting {discord_edition}...")
+                utils.start_discord(discord_edition, discord_parent_path)
 
             plugins_list = [
                 plugins.PluginInfo.from_url("https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js")
