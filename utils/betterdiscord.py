@@ -68,9 +68,7 @@ def update_bd_asar_only(is_ci: bool):
     config.dump_settings()
 
 
-def install_bd(discord_path: str, is_ci: bool):
-    update_bd_asar_only(is_ci)
-
+def inject_patch(discord_path: str, is_ci: bool):
     core_path_pattern = os.path.join(discord_path, "modules/discord_desktop_core-*/discord_desktop_core")
     core_paths = glob.glob(core_path_pattern)
 
@@ -104,12 +102,14 @@ def install_bd(discord_path: str, is_ci: bool):
 
 
 def fetch_latest_bd_release() -> str:
+    logger.info("Fetching latest BetterDiscord Stable version.")
     latest_release_url = requests.head(config.BD_LATEST_RELEASE_PAGE_URL, allow_redirects=True)
     return latest_release_url.url.split("/")[-1]
 
 
 def check_for_bd_updates(is_ci: bool) -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
+    logger.info("Checking for BetterDiscord updates...")
     return check_for_bd_ci_updates() if is_ci else fetch_latest_bd_release() != config.LAST_INSTALLED_BD_VERSION
 
 

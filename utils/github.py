@@ -35,7 +35,7 @@ def get_headers():
 
 
 def get_last_successful_run_id(workflows_url: str, workflow_author: str, limit: int = 5) -> Optional[str]:
-    logger.info(f"Trying to get last {limit} runs from {workflow_author}...")
+    logger.info(f"Trying to get last {limit} workflow runs from {workflow_author}...")
 
     try:
         runs_resp = requests.get(workflows_url, headers=get_headers() | {"per_page": str(limit)})
