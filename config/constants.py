@@ -1,5 +1,7 @@
 import os
 
+import config
+
 APPDATA = os.getenv("appdata")
 LOCALAPPDATA = os.getenv("localappdata")
 USERPROFILE = os.getenv("userprofile")
@@ -19,8 +21,8 @@ BD_CI_WORKFLOW_AUTHOR = "BetterDiscord CI"
 BD_CI_WORKFLOW_REPO = "BetterDiscord/BetterDiscord"
 BD_CI_WORKFLOWS_RUNS_URL = f"https://api.github.com/repos/{BD_CI_WORKFLOW_REPO}/actions/workflows/ci.yml/runs"
 
-DISCORD_POSSIBLE_PATHS = [
-    os.path.join(LOCALAPPDATA, "Discord"),
-    os.path.join(LOCALAPPDATA, "DiscordPTB"),
-    os.path.join(LOCALAPPDATA, "DiscordCanary")
-]
+DISCORD_POSSIBLE_PATHS = {
+    config.DiscordEdition.STABLE: [os.path.join(LOCALAPPDATA, "Discord")],
+    config.DiscordEdition.CANARY: [os.path.join(LOCALAPPDATA, "DiscordCanary")],
+    config.DiscordEdition.PTB: [os.path.join(LOCALAPPDATA, "DiscordPTB")],
+}

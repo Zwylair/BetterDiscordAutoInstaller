@@ -10,20 +10,12 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 
-def get_discord_edition(discord_parent_path: str) -> str:
-    for name in ("Canary", "PTB"):
-        if f"Discord{name}" in discord_parent_path:
-            return f"Discord{name}"
-    return "Discord"
+def get_log_file_path(edition: config.DiscordEdition) -> str:
+    return f"{config.APPDATA}/{edition.to_str().lower()}/logs/{edition}_updater_rCURRENT.log"
 
 
-def get_log_file_path(discord_parent_path: str) -> str:
-    edition = get_discord_edition(discord_parent_path)
-    return f"{config.APPDATA}/{edition.lower()}/logs/{edition}_updater_rCURRENT.log"
-
-
-def find_discord_path() -> str | None:
-    for path in config.DISCORD_POSSIBLE_PATHS:
+def find_discord_path(edition: config.DiscordEdition) -> str | None:
+    for path in config.DISCORD_POSSIBLE_PATHS.get(edition):
         if os.path.exists(path):
             return path
     return None
@@ -41,8 +33,8 @@ def get_latest_installed_discord_folder_name(discord_parent_path: str) -> str:
     return discord_versions[-1]
 
 
-def kill_discord(discord_parent_path: str):
-    executable_name = get_discord_edition(discord_parent_path) + ".exe"
+def kill_discord(edition: config.DiscordEdition):
+    executable_name = edition.to_str() + ".exe"
     for process in psutil.process_iter(["name"]):
         if process.info["name"] == executable_name:
             try:
@@ -52,9 +44,9 @@ def kill_discord(discord_parent_path: str):
                 pass
 
 
-def start_discord(discord_parent_path: str):
+def start_discord(edition: config.DiscordEdition, discord_parent_path: str):
     logger.info(f"Starting Discord from {discord_parent_path}...")
-    executable_name = get_discord_edition(discord_parent_path) + ".exe"
+    executable_name = edition.to_str() + ".exe"
 
     update_exe = os.path.join(discord_parent_path, "Update.exe")
     if not os.path.exists(update_exe):
@@ -65,19 +57,19 @@ def start_discord(discord_parent_path: str):
     subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def is_discord_running(discord_parent_path: str) -> bool:
-    executable_name = get_discord_edition(discord_parent_path) + ".exe"
+def is_discord_running(edition: config.DiscordEdition) -> bool:
+    executable_name = edition.to_str() + ".exe"
     for process in psutil.process_iter(["name"]):
         if process.info.get("name") == executable_name:
             return True
     return False
 
 
-def is_discord_updating(discord_parent_path: str) -> bool:
+def is_discord_updating(edition: config.DiscordEdition) -> bool:
     update_finished_messages = ("Updater main thread exiting", "Already up to date. Nothing to do")
 
     try:
-        with open(get_log_file_path(discord_parent_path), encoding="utf-8", errors="replace") as updater_log_file:
+        with open(get_log_file_path(edition), encoding="utf-8", errors="replace") as updater_log_file:
             content = updater_log_file.read()
 
         for message in update_finished_messages:

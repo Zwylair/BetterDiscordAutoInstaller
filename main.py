@@ -21,91 +21,110 @@ def main():
     if utils.check_for_bdai_updates() and not config.DISABLE_BDAI_AUTOUPDATE:
         utils.run_updater()
 
-    logger.info("Retrieving Discord installation folder...")
-    if not config.DISCORD_PARENT_PATH:
-        config.DISCORD_PARENT_PATH = utils.find_discord_path()
+    all_discord_paths = {
+        config.DiscordEdition.STABLE: config.DISCORD_PARENT_PATH,
+        config.DiscordEdition.CANARY: config.DISCORD_CANARY_PARENT_PATH,
+        config.DiscordEdition.PTB: config.DISCORD_PTB_PARENT_PATH
+    }
 
-        if not config.DISCORD_PARENT_PATH:
-            logger.error("No valid Discord installation found.")
+    for edition, discord_parent_path in all_discord_paths.items():
+        logger.info(f"Retrieving {edition} installation folder...")
 
-            config.DISCORD_PARENT_PATH = input("Enter the path to your Discord installation: ").strip()
-            if not os.path.exists(config.DISCORD_PARENT_PATH):
-                logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
-                sys.exit(1)
-    logger.info(f"Processing Discord installation: {config.DISCORD_PARENT_PATH}")
-    logger.info("")
+        if discord_parent_path:
+            break
+    else:
+        logger.error("No any valid Discord installation found.")
+        logger.info("Enter the path to your Discord Stable installation")
 
-    if not utils.is_discord_running(config.DISCORD_PARENT_PATH):
-        # wipe logs, because discord doesn't do that after every updater run
-        with open(utils.get_log_file_path(config.DISCORD_PARENT_PATH), "w") as f:
-            f.write("")
+        config.DISCORD_PARENT_PATH = input(">>> ").strip()
+        if not os.path.exists(config.DISCORD_PARENT_PATH):
+            logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
+            sys.exit(1)
 
-        logger.info("Discord is not running. Starting updater.")
-        utils.start_discord(config.DISCORD_PARENT_PATH)
-        time.sleep(1)
+        all_discord_paths[config.DiscordEdition.STABLE] = config.DISCORD_PARENT_PATH
+        config.dump_settings()
 
-        logger.info("Waiting for end of Discord updating.")
-        while utils.is_discord_updating(config.DISCORD_PARENT_PATH):
-            time.sleep(0.5)
-
-    discord_core_folder = utils.get_latest_installed_discord_folder_name(config.DISCORD_PARENT_PATH)
-    discord_path = os.path.join(config.DISCORD_PARENT_PATH, discord_core_folder)
     bd_release_tag = utils.get_release_tag(config.USE_BD_CI_RELEASES)
-
-    is_last_patch_is_up_to_date = discord_core_folder == config.LAST_INSTALLED_DISCORD_VERSION and not config.DISABLE_DISCORD_VERSION_CHECKING
-    is_bd_injected_already = utils.is_bd_injected(discord_path, config.USE_BD_CI_RELEASES)
     bd_has_updates = utils.check_for_bd_updates(config.USE_BD_CI_RELEASES)
     force_update_flag = "--force" in sys.argv
 
-    logger.info("")
-
-    if (
-            not is_last_patch_is_up_to_date
-            or not is_bd_injected_already
-            or bd_has_updates
-            or force_update_flag
-    ):
-        logger.info("Killing any running Discord processes...")
-        utils.kill_discord(discord_path)
-        time.sleep(2)
+    for discord_edition, discord_parent_path in all_discord_paths.items():
+        if not discord_parent_path:
+            continue
 
         logger.info("")
+        logger.info(f"Processing {discord_edition} installation: {discord_parent_path}")
 
-        if force_update_flag:
-            logger.info("Force-set update flags.")
-            is_last_patch_is_up_to_date = False
-            bd_has_updates = True
+        if not utils.is_discord_running(discord_edition):
+            logger.info("")
 
-        if not is_last_patch_is_up_to_date:
-            logger.info("Discord was updated. Verifying injection patch...")
-            config.LAST_INSTALLED_DISCORD_VERSION = discord_core_folder
-            config.dump_settings()
-            is_bd_injected_already = False
+            # wipe logs, because discord doesn't do that after every updater run
+            with open(utils.get_log_file_path(discord_edition), "w") as f:
+                f.write("")
 
-        if not is_bd_injected_already:
-            logger.info(f"Verifying BetterDiscord {bd_release_tag} injection patch.")
-            utils.inject_patch(discord_path, config.USE_BD_CI_RELEASES)
+            logger.info(f"{discord_edition} is not running. Starting updater.")
+            utils.start_discord(discord_edition, discord_parent_path)
+            time.sleep(1)
 
-        if bd_has_updates:
-            logger.info(f"BetterDiscord {bd_release_tag} has a new version, updating asar only.")
-            utils.update_bd_asar_only(config.USE_BD_CI_RELEASES)
+            logger.info(f"Waiting for end of {discord_edition} updating.")
+            while utils.is_discord_updating(discord_edition):
+                time.sleep(0.5)
 
+        discord_core_folder = utils.get_latest_installed_discord_folder_name(discord_parent_path)
+        discord_path = os.path.join(discord_parent_path, discord_core_folder)
+
+        is_last_patch_is_up_to_date = discord_core_folder == config.get_last_installed_discord_version(discord_edition)
+        is_bd_injected_already = utils.is_bd_injected(discord_path, config.USE_BD_CI_RELEASES)
+
+        if (
+                not is_last_patch_is_up_to_date
+                or not is_bd_injected_already
+                or bd_has_updates
+                or force_update_flag
+        ):
+            logger.info("")
+            logger.info(f"Killing any running {discord_edition} processes...")
+            utils.kill_discord(discord_edition)
+            time.sleep(2)
+
+            logger.info("")
+
+            if force_update_flag:
+                logger.info("Force-set update flags.")
+                is_last_patch_is_up_to_date = False
+                bd_has_updates = True
+
+            if not is_last_patch_is_up_to_date:
+                logger.info(f"{discord_edition} was updated. Verifying injection patch...")
+                config.set_discord_version(discord_edition, discord_core_folder)
+                config.dump_settings()
+                is_bd_injected_already = False
+
+            if not is_bd_injected_already:
+                logger.info(f"Verifying BetterDiscord {bd_release_tag} injection patch.")
+                utils.inject_patch(discord_path, config.USE_BD_CI_RELEASES)
+
+            if bd_has_updates:
+                logger.info(f"BetterDiscord {bd_release_tag} has a new version, updating asar only.")
+                utils.update_bd_asar_only(config.USE_BD_CI_RELEASES)
+                bd_has_updates = False
+
+            logger.info("")
+            logger.info(f"Restarting {discord_edition}...")
+            utils.start_discord(discord_edition, discord_parent_path)
+
+            plugins_list = [
+                plugins.PluginInfo.from_url("https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js")
+            ]
+
+            logger.info("")
+            for plugin_info in plugins_list:
+                logger.info(f"Installing {plugin_info.get_name()} plugin...")
+                plugins.download_plugin(plugin_info)
+        else:
+            logger.info(f"BetterDiscord {bd_release_tag} ({discord_edition}) is up to date and injected. No action needed.")
         logger.info("")
-        logger.info("Restarting Discord...")
-        utils.start_discord(config.DISCORD_PARENT_PATH)
 
-        plugins_list = [
-            plugins.PluginInfo.from_url("https://raw.githubusercontent.com/riolubruh/YABDP4Nitro/main/YABDP4Nitro.plugin.js")
-        ]
-
-        logger.info("")
-        for plugin_info in plugins_list:
-            logger.info(f"Installing {plugin_info.get_name()} plugin...")
-            plugins.download_plugin(plugin_info)
-    else:
-        logger.info(f"BetterDiscord {bd_release_tag} is up to date and injected. No action needed.")
-
-    logger.info("")
     logger.info("Installation complete. Exiting in 3 seconds...")
     time.sleep(3)
     sys.exit(0)

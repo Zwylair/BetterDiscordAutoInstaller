@@ -6,14 +6,13 @@ import requests
 
 import config
 import utils
-from utils.other import backslash_path
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
 
 
 def get_asar_path(is_ci: bool) -> str:
-    return backslash_path(config.BD_CI_ASAR_PATH if is_ci else config.BD_ASAR_PATH)
+    return utils.backslash_path(config.BD_CI_ASAR_PATH if is_ci else config.BD_ASAR_PATH)
 
 
 def get_require_line(is_ci: bool) -> str:
@@ -115,26 +114,30 @@ def check_for_bd_updates(is_ci: bool) -> bool:
 
 def check_for_bd_ci_updates() -> bool:
     """Checks for updates and return True if there is an available update, False otherwise"""
-    return utils.get_last_successful_run_id(config.BD_CI_WORKFLOWS_RUNS_URL, config.BD_CI_WORKFLOW_AUTHOR) != config.LAST_INSTALLED_BD_CI_VERSION
+    return utils.get_artifacts_from_successful_run(
+        config.BD_CI_WORKFLOWS_RUNS_URL,
+        config.BD_CI_WORKFLOW_REPO,
+        config.BD_CI_WORKFLOW_AUTHOR
+    ).run_id != config.LAST_INSTALLED_BD_CI_VERSION
 
 
 def update_bd_ci_asar() -> bool:
-    run_id = utils.get_last_successful_run_id(config.BD_CI_WORKFLOWS_RUNS_URL, config.BD_CI_WORKFLOW_AUTHOR)
-    if not run_id:
+    """Updates BD CI and returns False if there is any error, True otherwise"""
+
+    release_meta = utils.get_artifacts_from_successful_run(config.BD_CI_WORKFLOWS_RUNS_URL, config.BD_CI_WORKFLOW_REPO, config.BD_CI_WORKFLOW_AUTHOR)
+    if not release_meta:
+        logger.info(f"Failed to fetch BetterDiscord CI artifacts from workflow run.")
         return False
 
-    artifacts = utils.get_artifacts_from_run(config.BD_CI_WORKFLOW_REPO, config.BD_CI_WORKFLOW_AUTHOR, run_id)
-    if not artifacts:
-        return False
-
-    artifact = utils.find_artefact(artifacts)
+    artifact = utils.find_artefact(release_meta.artifacts)
     if not artifact:
+        logger.info(f"Failed to find BetterDiscord CI artifact ({release_meta.run_id}).")
         return False
 
     success = utils.download_artifact(artifact)
     if not success:
         return False
 
-    config.LAST_INSTALLED_BD_CI_VERSION = run_id
+    config.LAST_INSTALLED_BD_CI_VERSION = release_meta.run_id
     config.dump_settings()
     return True

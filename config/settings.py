@@ -6,6 +6,11 @@ USE_BD_CI_RELEASES: bool = False
 GITHUB_TOKEN: Optional[str] = None
 
 DISCORD_PARENT_PATH: Optional[str] = None
+DISCORD_CANARY_PARENT_PATH: Optional[str] = None
+DISCORD_PTB_PARENT_PATH: Optional[str] = None
 LAST_INSTALLED_DISCORD_VERSION: Optional[str] = None
+LAST_INSTALLED_DISCORD_CANARY_VERSION: Optional[str] = None
+LAST_INSTALLED_DISCORD_PTB_VERSION: Optional[str] = None
+
 LAST_INSTALLED_BD_VERSION: Optional[str] = None
 LAST_INSTALLED_BD_CI_VERSION: Optional[str] = None

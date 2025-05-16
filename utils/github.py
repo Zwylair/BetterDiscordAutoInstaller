@@ -2,6 +2,7 @@ import io
 import os
 import logging
 import zipfile
+from dataclasses import dataclass
 from typing import Optional
 
 import requests
@@ -10,6 +11,12 @@ import config
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
+
+
+@dataclass
+class BetterDiscordCIMeta:
+    run_id: str
+    artifacts: dict
 
 
 def request_github_token():
@@ -34,13 +41,30 @@ def get_headers():
     }
 
 
-def get_last_successful_run_id(workflows_url: str, workflow_author: str, limit: int = 5) -> Optional[str]:
-    logger.info(f"Trying to get last {limit} workflow runs from {workflow_author}...")
+def get_artifacts_from_workflow(repo: str, author: str, run_id: str) -> Optional[dict]:
+    logger.info(f"Trying to get artifacts from {author} run (id: {run_id})...")
 
     try:
-        runs_resp = requests.get(workflows_url, headers=get_headers() | {"per_page": str(limit)})
+        arts_resp = requests.get(f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts", headers=get_headers())
+        arts_resp.raise_for_status()
+        return arts_resp.json()["artifacts"]
+    except Exception as e:
+        logger.error(str(e), exc_info=e)
+        return None
+
+
+def get_artifacts_from_successful_run(
+        workflows_url: str,
+        repo: str,
+        workflow_author: str,
+        runs_limit: int = 5
+) -> Optional[BetterDiscordCIMeta]:
+    logger.info(f"Trying to get last {runs_limit} workflow runs from {workflow_author}...")
+
+    try:
+        runs_resp = requests.get(workflows_url, headers=get_headers() | {"per_page": str(runs_limit)})
         runs_resp.raise_for_status()
-        workflow_runs = runs_resp.json()["workflow_runs"][:limit]
+        workflow_runs = runs_resp.json()["workflow_runs"][:runs_limit]
 
         for run in workflow_runs:
             if run.get("name") != workflow_author:
@@ -49,22 +73,14 @@ def get_last_successful_run_id(workflows_url: str, workflow_author: str, limit: 
             if run.get("conclusion") != "success":
                 continue
 
-            return run["id"]
+            run_id = run["id"]
+            artifacts = get_artifacts_from_workflow(repo, workflow_author, run_id)
+
+            if artifacts:
+                return BetterDiscordCIMeta(run_id, artifacts)
         else:
-            logger.warning(f"No successful runs in latest {limit} {workflow_author} builds.")
+            logger.warning(f"No successful runs with artifacts in latest {runs_limit} {workflow_author} builds.")
             return None
-    except Exception as e:
-        logger.error(str(e), exc_info=e)
-        return None
-
-
-def get_artifacts_from_run(repo: str, author: str, run_id: str) -> Optional[dict]:
-    logger.info(f"Trying to get artifacts from {author} run (id: {run_id})...")
-
-    try:
-        arts_resp = requests.get(f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/artifacts", headers=get_headers())
-        arts_resp.raise_for_status()
-        return arts_resp.json()["artifacts"]
     except Exception as e:
         logger.error(str(e), exc_info=e)
         return None
