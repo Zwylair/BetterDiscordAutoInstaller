@@ -27,6 +27,7 @@ def load_settings():
         config.DISCORD_PTB_PARENT_PATH = settings.get("discord_ptb_installed_path", config.DISCORD_PTB_PARENT_PATH)
         config.DISABLE_BDAI_AUTOUPDATE = settings.get("disable_bdai_autoupdate", config.DISABLE_BDAI_AUTOUPDATE)
         config.USE_BD_CI_RELEASES = settings.get("use_betterdiscord_ci_releases", config.USE_BD_CI_RELEASES)
+        config.WORKFLOW_RUNS_LIMIT = settings.get("workflow_runs_limit", config.WORKFLOW_RUNS_LIMIT)
 
         # BD & Discord cached data
         config.DISABLE_DISCORD_VERSION_CHECKING = settings.get("disable_version_check", config.DISABLE_DISCORD_VERSION_CHECKING)
@@ -48,6 +49,7 @@ def dump_settings():
                 "discord_ptb_installed_path": config.DISCORD_PTB_PARENT_PATH,
                 "disable_bdai_autoupdate": config.DISABLE_BDAI_AUTOUPDATE,
                 "use_betterdiscord_ci_releases": config.USE_BD_CI_RELEASES,
+                "workflow_runs_limit": config.WORKFLOW_RUNS_LIMIT,
 
                 # BD & Discord cached data
                 "disable_version_check": config.DISABLE_DISCORD_VERSION_CHECKING,

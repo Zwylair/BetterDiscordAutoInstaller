@@ -57,8 +57,9 @@ def get_artifacts_from_successful_run(
         workflows_url: str,
         repo: str,
         workflow_author: str,
-        runs_limit: int = 5
+        runs_limit: int = None
 ) -> Optional[BetterDiscordCIMeta]:
+    runs_limit = runs_limit if runs_limit else config.WORKFLOW_RUNS_LIMIT
     logger.info(f"Trying to get last {runs_limit} workflow runs from {workflow_author}...")
 
     try:
