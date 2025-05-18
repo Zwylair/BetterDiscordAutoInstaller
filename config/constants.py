@@ -6,7 +6,7 @@ APPDATA = os.getenv("appdata")
 LOCALAPPDATA = os.getenv("localappdata")
 USERPROFILE = os.getenv("userprofile")
 
-BDAI_SCRIPT_VERSION = "1.4.0"
+BDAI_SCRIPT_VERSION = "1.5.0"
 BDAI_LATEST_RELEASE_PAGE_URL = "https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/latest"
 BDAI_RAW_RELEASE_URL_TEMPLATE = "https://github.com/Zwylair/BetterDiscordAutoInstaller/archive/refs/tags/{tag}.zip"
 BDAI_RELEASE_URL_TEMPLATE = "https://github.com/Zwylair/BetterDiscordAutoInstaller/releases/download/{tag}/BetterDiscordAutoInstaller-{tag}.zip"
