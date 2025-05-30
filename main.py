@@ -27,22 +27,29 @@ def main():
         config.DiscordEdition.PTB: config.DISCORD_PTB_PARENT_PATH
     }
 
-    for edition, discord_parent_path in all_discord_paths.items():
-        logger.info(f"Retrieving {edition} installation folder...")
+    found_path=False
+    for arg in sys.argv:
+        arg_sanitized=arg.lower().replace(' ','')
+        if arg_sanitized.startswith('--installationpath=') or arg_sanitized.startswith('-ip='):
+            found_path=True
+            config.DISCORD_PARENT_PATH = arg.split('=')[1].replace('"','').strip()
+            logger.info(f"Using Discord installation path provided via sys.argv: {config.DISCORD_PARENT_PATH}")
+    if not found_path:
+        for edition, discord_parent_path in all_discord_paths.items():
+            logger.info(f"Retrieving {edition} installation folder...")
 
-        if discord_parent_path:
-            break
-    else:
-        logger.error("No any valid Discord installation found.")
-        logger.info("Enter the path to your Discord Stable installation")
+            if discord_parent_path:
+                break
+        else:
+            logger.error("No any valid Discord installation found.")
+            logger.info("Enter the path to your Discord Stable installation")
+            config.DISCORD_PARENT_PATH = input(">>> ").strip()
+            if not os.path.exists(config.DISCORD_PARENT_PATH):
+                logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
+                sys.exit(1)
 
-        config.DISCORD_PARENT_PATH = input(">>> ").strip()
-        if not os.path.exists(config.DISCORD_PARENT_PATH):
-            logger.error(f"Invalid path provided: {config.DISCORD_PARENT_PATH}")
-            sys.exit(1)
-
-        all_discord_paths[config.DiscordEdition.STABLE] = config.DISCORD_PARENT_PATH
-        config.dump_settings()
+            all_discord_paths[config.DiscordEdition.STABLE] = config.DISCORD_PARENT_PATH
+            config.dump_settings()
 
     bd_release_tag = utils.get_release_tag(config.USE_BD_CI_RELEASES)
     bd_has_updates = utils.check_for_bd_updates(config.USE_BD_CI_RELEASES)
