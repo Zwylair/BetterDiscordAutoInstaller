@@ -1,0 +1,28 @@
+[project]
+name = "bdai"
+dynamic = ["version"]
+description = "BetterDiscordAutoInstaller automatically updates Discord, launches it and applies BetterDiscord"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "psutil~=5.9.7",
+    "pywin32>=310 ; sys_platform == 'win32'",
+    "requests~=2.32.3",
+]
+[dependency-groups]
+dev = ["cx-freeze>=8.3.0", "types-pywin32>=310 ; sys_platform == 'win32'"]
+[project.scripts]
+bdai = "main:main"
+# bdai-update = "updater:main"
+
+[project.gui-scripts]
+bdai-headless = "main:main" # This is useful on Windows to avoid a cmd popup
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+packages = ["."]
+[tool.hatch.version]
+path = "config/constants.py"
+pattern = 'BDAI_SCRIPT_VERSION = "(?P<version>[^"]+)"'

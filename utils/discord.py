@@ -53,6 +53,7 @@ def start_discord(edition: config.DiscordEdition, discord_parent_path: str):
         raise FileNotFoundError(f"Update.exe not found in: {discord_parent_path}")
 
     command = f'"{update_exe}" --processStart {executable_name}'
+    command += " --process-start-args --start-minimized" if config.DISCORD_LAUNCH_MINIMIZED else ""
     logger.info(f"Starting Discord using command: {command}")
     subprocess.Popen(command, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

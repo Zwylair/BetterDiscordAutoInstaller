@@ -1,7 +1,7 @@
 import os
 import sys
 
-import winshell
+from win32com.client import Dispatch
 
 import config
 
@@ -17,15 +17,20 @@ def main():
 
     print(f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION} (startup_manager)")
 
+    link_working_directory = os.path.dirname(__file__)
+    link_target = sys.executable
+    link_arguments = os.path.join(link_working_directory, "main.py")
+    uv_target = os.path.join(os.path.dirname(sys.executable), "bdai-headless.exe")
     if getattr(sys, "frozen", False):
         link_working_directory = os.path.dirname(sys.executable)
         link_working_directory = os.path.split(link_working_directory)[0]  # a/b/c/ -> a/b/
         link_target = os.path.join(link_working_directory, "updater.exe")
         link_arguments = "--run"
-    else:
-        link_working_directory = os.path.dirname(__file__)
-        link_target = sys.executable
-        link_arguments = os.path.join(link_working_directory, "main.py")
+    elif os.path.isfile(uv_target):
+        config.load_settings()
+        link_working_directory = config.DISCORD_PARENT_PATH
+        link_target = uv_target
+        link_arguments = ""
     link_path = os.path.join(
         os.getenv("appdata"),
         r"Microsoft\Windows\Start Menu\Programs\Startup\BetterDiscordAutoInstaller.lnk"
@@ -47,11 +52,13 @@ def main():
             break
         elif command == "1":
             try:
-                with winshell.shortcut(link_path) as link:
-                    link.path = link_target
-                    link.arguments = link_arguments
-                    link.working_directory = link_working_directory
-                    link.description = f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}"
+                shell = Dispatch("WScript.Shell")
+                link = shell.CreateShortCut(link_path)
+                link.TargetPath = link_target
+                link.Arguments = link_arguments
+                link.WorkingDirectory = link_working_directory
+                link.Description = f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}"
+                link.save()
                 print(".lnk file of the BetterDiscordAutoInstaller was added to startup.")
 
             except PermissionError:

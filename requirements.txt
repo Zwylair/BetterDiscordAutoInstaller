@@ -1,5 +1,4 @@
 psutil~=5.9.7
 requests~=2.32.3
-winshell~=0.6
-pypiwin32==223
+pywin32==310 ; sys_platform == 'win32'
 cx-freeze

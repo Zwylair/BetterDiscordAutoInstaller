@@ -6,14 +6,29 @@ import logging
 import utils
 import config
 import plugins
+from startup_manager import main as startup_manager
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="(%(asctime)s) %(message)s")
-
+if not sys.stdout:
+    formatter = logging.Formatter("%(asctime)s %(message)s")
+    file_handler = logging.FileHandler(
+        mode="w",
+        filename=os.path.join(
+            os.path.dirname(config.SETTINGS_PATH),
+            "bdai.log"
+        )
+    )
+    file_handler.setLevel(logging.INFO)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
 def main():
     config.load_settings()
     config.load_github_token()
+    if "--startup-manager" in sys.argv:
+        startup_manager()
+        return
 
     logger.info(f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}")
 
@@ -24,7 +39,7 @@ def main():
     all_discord_paths = {
         config.DiscordEdition.STABLE: config.DISCORD_PARENT_PATH,
         config.DiscordEdition.CANARY: config.DISCORD_CANARY_PARENT_PATH,
-        config.DiscordEdition.PTB: config.DISCORD_PTB_PARENT_PATH
+        config.DiscordEdition.PTB: config.DISCORD_PTB_PARENT_PATH,
     }
 
     for edition, discord_parent_path in all_discord_paths.items():
@@ -33,7 +48,9 @@ def main():
         if discord_parent_path:
             break
     else:
-        logger.error("No any valid Discord installation found.")
+        logger.error("No valid Discord installation found.")
+        if not sys.stdout:
+            sys.exit(1)
         logger.info("Enter the path to your Discord Stable installation")
 
         config.DISCORD_PARENT_PATH = input(">>> ").strip()
@@ -126,6 +143,7 @@ def main():
             logger.info(f"BetterDiscord {bd_release_tag} ({discord_edition}) is up to date and injected. No action needed.")
         logger.info("")
 
+    config.dump_settings()
     logger.info("Installation complete. Exiting in 3 seconds...")
     time.sleep(3)
     sys.exit(0)

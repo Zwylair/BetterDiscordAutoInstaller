@@ -35,7 +35,7 @@ For macOS, the user can also choose to bind script to a keyboard shortcut to man
 ### Self update checks
 
 BDAI will check if it is up to date. You can disable autoupdate by changing the `disable_bdai_autoupdate`
-setting to `true` in the `settings.json` file (but you will still  receive a message that a new version
+setting to `true` in the `settings.json` file (but you will still receive a message that a new version
 has been released).
 
 ## Setup and Dependencies
@@ -46,6 +46,12 @@ has been released).
 - Run the script: `python main.py`
 
 To add BetterDiscordAutoInstaller to your startup apps: `python startup_manager.py`
+
+#### [UV](https://docs.astral.sh/uv/)
+  - Install the tool: `uv tool install git+https://github.com/Zwylair/BetterDiscordAutoInstaller`
+  - Run with: `bdai` (or `uvx bdai` if it wasn't added to PATH)
+    - It can easily be updated later with: `uv tool upgrade bdai`
+  - `[Optional]` Add to your startup with: `bdai --startup-manager` (`uvx bdai --startup-manager` if not in PATH)
 
 ### MacOS
 You need to go to [this](https://github.com/Zwylair/BetterDiscordAutoInstaller/tree/macos?tab=readme-ov-file#setup-and-dependencies) README.md

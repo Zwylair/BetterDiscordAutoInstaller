@@ -12,6 +12,7 @@ RERUN_DISCORD_EDITION: Optional[str] = config.DiscordEdition.STABLE.to_str()
 DISCORD_PARENT_PATH: Optional[str] = None
 DISCORD_CANARY_PARENT_PATH: Optional[str] = None
 DISCORD_PTB_PARENT_PATH: Optional[str] = None
+DISCORD_LAUNCH_MINIMIZED: bool = False
 LAST_INSTALLED_DISCORD_VERSION: Optional[str] = None
 LAST_INSTALLED_DISCORD_CANARY_VERSION: Optional[str] = None
 LAST_INSTALLED_DISCORD_PTB_VERSION: Optional[str] = None
