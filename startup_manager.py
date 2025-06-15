@@ -1,7 +1,7 @@
 import os
 import sys
 
-import winshell
+from win32com.client import Dispatch
 
 import config
 
@@ -47,11 +47,13 @@ def main():
             break
         elif command == "1":
             try:
-                with winshell.shortcut(link_path) as link:
-                    link.path = link_target
-                    link.arguments = link_arguments
-                    link.working_directory = link_working_directory
-                    link.description = f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}"
+                shell = Dispatch("WScript.Shell")
+                link = shell.CreateShortCut(link_path)
+                link.TargetPath = link_target
+                link.Arguments = link_arguments
+                link.WorkingDirectory = link_working_directory
+                link.Description = f"BetterDiscordAutoInstaller v{config.BDAI_SCRIPT_VERSION}"
+                link.save()
                 print(".lnk file of the BetterDiscordAutoInstaller was added to startup.")
 
             except PermissionError:
